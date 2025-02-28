@@ -1,35 +1,10 @@
 # PeerChat
-点对点(P2P)通信和聊天功能
+## 简介
 
-```
-src/
-├── components/
-│   ├── layout/
-│   │   └── ChatLayout.jsx             # 主布局组件
-│   │
-│   ├── sidebar/
-│   │   ├── Sidebar.jsx                # 侧边栏容器（包含搜索栏）
-│   │   └── ChatListItem.jsx           # 聊天列表项（包含头像、未读徽章）
-│   │
-│   ├── chat/
-│   │   ├── ChatPanel.jsx              # 右侧聊天面板（包含头部）
-│   │   ├── MessageList.jsx            # 消息列表
-│   │   └── Message.jsx                # 消息组件（包含时间和状态）
-│   │
-│   ├── input/
-│   │   └── ChatInput.jsx              # 聊天输入区域（包含所有输入控件）
-│   │
-│   └── common/
-│       ├── Avatar.jsx                 # 通用头像组件
-│       └── Badge.jsx                  # 通用徽章组件（可用于未读消息）
-│
-├── hooks/
-│   └── useChat.js                     # 聊天相关逻辑
-│
-├── context/
-│   └── ChatContext.jsx                # 聊天全局状态
-│
-└── pages/
-    └── ChatPage.jsx                   # 整合所有组件的页面
-```
+小型P2P聊天应用：PeerJS + 公共STUN，下面是实现的逻辑
 
+## 基本概念
+
+基于ICE框架完成NAT穿透，利用信令服务器(PeerServer)交换SDP协商信息和ICE候选地址，建立端到端的安全通道；一旦连接建立，数据通过DTLS加密后使用SRTP/SCTP协议在对等端之间直接传输，完全绕过服务器，从而在浏览器间实现低延迟、高安全性的实时通信。在多人会话场景中，采用Mesh网络拓扑结构使各节点间形成完全图，每个节点都维护与其他所有节点的独立WebRTC连接。
+
+## 图示
