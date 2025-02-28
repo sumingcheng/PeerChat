@@ -1,6 +1,6 @@
 import { createHashRouter } from 'react-router-dom'
 import { BaseLayout } from '@/layouts/BaseLayout'
-import Home from '@/view/home'
+import Home from '@/view/chat'
 import ErrorPage from '@/view/error'
 
 
