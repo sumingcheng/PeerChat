@@ -1,4 +1,5 @@
 import { BaseLayout } from '@/layouts/BaseLayout'
+import App from '@/App'
 import Home from '@/view/chat'
 import ErrorPage from '@/view/error'
 import { createHashRouter } from 'react-router-dom'
@@ -17,14 +18,14 @@ const withBaseLayout = (Component: React.ComponentType) => {
 export const router = createHashRouter([
   {
     path: '/',
-    element: withBaseLayout(Home)
+    element: <App />
   },
   {
     path: '/home',
-    element: withBaseLayout(Home)
+    element: <App />
   },
   {
     path: '*',
-    element: withBaseLayout(ErrorPage)
+    element: <ErrorPage />
   },
 ]) 
