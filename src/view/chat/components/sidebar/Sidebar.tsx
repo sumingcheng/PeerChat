@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
 import { useChat } from '@/context/ChatContext'
-import ChatListItem from './ChatListItem'
-import { Root, Trigger, Portal, Overlay, Content, Title, Description } from '@radix-ui/react-dialog';
-import { GroupChat } from '@/types/chat';
-import toast, { Toaster } from 'react-hot-toast';
+import { GroupChat } from '@/types/chat'
+import { Content, Description, Overlay, Portal, Root, Title } from '@radix-ui/react-dialog'
+import React, { useState } from 'react'
+import toast, { Toaster } from 'react-hot-toast'
 
 const overlayShow = 'animate-[overlay-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 const contentShow = 'animate-[content-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
@@ -14,7 +13,6 @@ const Sidebar: React.FC = () => {
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
   const [tempUserName, setTempUserName] = useState('');
   const [roomIdToJoin, setRoomIdToJoin] = useState('');
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [urlInputDialogOpen, setUrlInputDialogOpen] = useState(false);
   const [urlInput, setUrlInput] = useState('');
   

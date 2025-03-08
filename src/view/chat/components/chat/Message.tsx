@@ -1,22 +1,31 @@
+import { useChat } from '@/context/ChatContext'
 import { Message as MessageType } from '@/types/chat'
 import React from 'react'
-import Avatar from '../common/Avatar'
 
 interface MessageProps {
   message: MessageType;
 }
 
 const Message: React.FC<MessageProps> = ({ message }) => {
-  const isOwn = message.senderId === 'currentUser'; // 这里需要根据实际认证系统修改
+  const { userId } = useChat();
+  const isOwn = message.sender === userId;
+  
+  // 系统消息特殊处理
+  if (message.sender === 'system') {
+    return (
+      <div className="flex justify-center my-2">
+        <div className="px-3 py-1 bg-gray-100 rounded-full text-xs text-gray-500">
+          {message.content}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`flex ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
-      <Avatar
-        src={message.sender.avatar}
-        alt={message.sender.name}
-        size="sm"
-        className={isOwn ? 'ml-3' : 'mr-3'}
-      />
+      <div className={`w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-white ${isOwn ? 'ml-3' : 'mr-3'}`}>
+        {message.senderName ? message.senderName.charAt(0).toUpperCase() : '?'}
+      </div>
       <div className={`max-w-[70%] flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
         <div
           className={`rounded-lg p-3 ${
@@ -28,10 +37,10 @@ const Message: React.FC<MessageProps> = ({ message }) => {
           {message.content}
         </div>
         <div className="mt-1 text-xs text-gray-500 flex items-center">
-          <span>{message.time}</span>
+          <span>{new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
           {isOwn && (
             <span className="ml-2">
-              {message.status === 'sent' ? '已发送' : '发送中...'}
+              已发送
             </span>
           )}
         </div>

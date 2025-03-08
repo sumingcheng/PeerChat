@@ -1,7 +1,5 @@
 import React from 'react';
 import { ChatListItemProps } from '@/types/chat';
-import Avatar from '../common/Avatar';
-import Badge from '../common/Badge';
 import { Root as SeparatorRoot } from '@radix-ui/react-separator';
 
 const ChatListItem: React.FC<ChatListItemProps> = ({ chat, isActive, onClick }) => {
@@ -13,23 +11,28 @@ const ChatListItem: React.FC<ChatListItemProps> = ({ chat, isActive, onClick }) 
         onClick={onClick}
       >
         <div className="relative">
-          <Avatar src={chat.avatar} alt={chat.name} size="md" />
-          <Badge count={chat.unreadCount} />
+          <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white">
+            {chat.name.charAt(0).toUpperCase()}
+          </div>
+          {/* 未读消息标记，如果需要可以添加 */}
         </div>
         <div className="ml-3 flex-1 min-w-0">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium text-gray-900 truncate">
               {chat.name}
             </h3>
-            {chat.lastMessage && (
+            {chat.lastMessageTime && (
               <span className="text-xs text-gray-500">
-                {chat.lastMessage.time}
+                {new Date(chat.lastMessageTime).toLocaleTimeString([], { 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                })}
               </span>
             )}
           </div>
           {chat.lastMessage && (
             <p className="text-sm text-gray-500 truncate">
-              {chat.lastMessage.content}
+              {chat.lastMessage}
             </p>
           )}
         </div>

@@ -1,4 +1,3 @@
-import * as RadixAvatar from '@radix-ui/react-avatar'
 import React from 'react'
 import { AvatarProps } from '@/types/chat'
 
@@ -9,20 +8,23 @@ const Avatar: React.FC<AvatarProps> = ({ src, alt, size = 'md', className = '' }
     lg: 'w-12 h-12'
   } as const;
 
-  return (
-    <RadixAvatar.Root className={`relative inline-flex ${sizeClasses[size]} ${className}`}>
-      <RadixAvatar.Image
-        src={src || '/default-avatar.png'}
+  const sizeClass = sizeClasses[size];
+
+  if (src) {
+    return (
+      <img
+        src={src}
         alt={alt}
-        className="w-full h-full rounded-full object-cover"
+        className={`${sizeClass} rounded-full object-cover ${className}`}
       />
-      <RadixAvatar.Fallback
-        className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center text-gray-500"
-        delayMs={600}
-      >
-        {alt.slice(0, 2).toUpperCase()}
-      </RadixAvatar.Fallback>
-    </RadixAvatar.Root>
+    );
+  }
+
+  // 如果没有图片，显示首字母
+  return (
+    <div className={`${sizeClass} rounded-full bg-blue-500 flex items-center justify-center text-white ${className}`}>
+      {alt.charAt(0).toUpperCase()}
+    </div>
   );
 };
 

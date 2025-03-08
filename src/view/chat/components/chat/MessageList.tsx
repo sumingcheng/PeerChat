@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useChat } from '@/context/ChatContext';
 import { Message } from '@/types/chat';
-import Avatar from '../common/Avatar';
 
 const MessageItem: React.FC<{ message: Message; isOwnMessage: boolean }> = ({ message, isOwnMessage }) => {
   const { currentChat } = useChat();
@@ -31,10 +30,9 @@ const MessageItem: React.FC<{ message: Message; isOwnMessage: boolean }> = ({ me
     <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-4`}>
       {!isOwnMessage && (
         <div className="mr-2 flex-shrink-0">
-          <Avatar 
-            size="sm" 
-            fallback={senderName.charAt(0).toUpperCase()} 
-          />
+          <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white">
+            {senderName.charAt(0).toUpperCase()}
+          </div>
         </div>
       )}
       
@@ -52,10 +50,9 @@ const MessageItem: React.FC<{ message: Message; isOwnMessage: boolean }> = ({ me
       
       {isOwnMessage && (
         <div className="ml-2 flex-shrink-0">
-          <Avatar 
-            size="sm" 
-            fallback="我" 
-          />
+          <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white">
+            我
+          </div>
         </div>
       )}
     </div>

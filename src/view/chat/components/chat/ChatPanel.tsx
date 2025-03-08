@@ -3,7 +3,6 @@ import { Content, Description, Overlay, Portal, Root, Title } from '@radix-ui/re
 import { Root as SeparatorRoot } from '@radix-ui/react-separator'
 import React, { useCallback, useEffect, useState } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
-import Avatar from '../common/Avatar'
 import GroupChatHeader from '../group/GroupChatHeader'
 import GroupUserList from '../group/GroupUserList'
 import ChatInput from '../input/ChatInput'
@@ -211,7 +210,9 @@ const ChatPanel: React.FC = () => {
         // 普通聊天界面
         <>
           <div className="p-4 flex items-center border-b border-gray-200">
-            <Avatar src={currentChat.avatar} alt={currentChat.name} size="sm" />
+            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white">
+              {currentChat.name.charAt(0).toUpperCase()}
+            </div>
             <h2 className="ml-3 font-medium">{currentChat.name}</h2>
           </div>
           <SeparatorRoot className="h-[1px] bg-gray-100" />
