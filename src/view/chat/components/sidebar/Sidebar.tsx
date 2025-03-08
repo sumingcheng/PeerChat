@@ -195,34 +195,41 @@ const Sidebar: React.FC = () => {
   
   return (
     <div className="h-full flex flex-col">
-      <div className="p-4 border-b flex items-center justify-between">
-        <input
-          type="text"
-          placeholder="搜索聊天..."
-          className="w-full px-4 py-2 rounded-lg bg-gray-100 focus:outline-none"
-          disabled={isConnecting}
-        />
-        {userName && (
-          <div className="ml-2 text-sm text-gray-500 flex items-center">
-            <span className="mr-1">用户:</span>
-            <span className="font-medium text-blue-500">{userName}</span>
-            <button 
-              onClick={() => {
-                setTempUserName(userName);
-                setNameDialogOpen(true);
-              }}
-              className="ml-1 p-1 text-gray-400 hover:text-gray-600"
-              title="修改用户名"
-              disabled={isConnecting}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" 
-                />
-              </svg>
-            </button>
-          </div>
-        )}
+      <div className="p-4 border-b">
+        <div className="flex flex-col space-y-3">
+          <input
+            type="text"
+            placeholder="搜索聊天..."
+            className="w-full px-4 py-2 rounded-lg bg-gray-100 focus:outline-none"
+            disabled={isConnecting}
+          />
+          
+          {userName && (
+            <div className="flex items-center justify-between bg-blue-50 px-3 py-2 rounded-lg">
+              <div className="flex items-center">
+                <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">
+                  {userName.charAt(0).toUpperCase()}
+                </div>
+                <span className="ml-2 font-medium text-blue-700 truncate max-w-[120px]">{userName}</span>
+              </div>
+              <button 
+                onClick={() => {
+                  setTempUserName(userName);
+                  setNameDialogOpen(true);
+                }}
+                className="p-1 text-blue-400 hover:text-blue-600 rounded-full hover:bg-blue-100"
+                title="修改用户名"
+                disabled={isConnecting}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" 
+                  />
+                </svg>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
       
       <div className="flex-1 overflow-y-auto">
