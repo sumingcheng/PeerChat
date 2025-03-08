@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useChat } from '@/context/ChatContext'
 import ChatListItem from './ChatListItem'
 import { Root, Trigger, Portal, Overlay, Content, Title, Description } from '@radix-ui/react-dialog';
-import { Root as ToastRoot, Provider as ToastProvider, Viewport, Close, Title as ToastTitle } from '@radix-ui/react-toast';
 import { GroupChat } from '@/types/chat';
+import toast, { Toaster } from 'react-hot-toast';
 
 const overlayShow = 'animate-[overlay-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 const contentShow = 'animate-[content-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
@@ -14,8 +14,6 @@ const Sidebar: React.FC = () => {
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
   const [tempUserName, setTempUserName] = useState('');
   const [roomIdToJoin, setRoomIdToJoin] = useState('');
-  const [toastOpen, setToastOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [urlInputDialogOpen, setUrlInputDialogOpen] = useState(false);
   const [urlInput, setUrlInput] = useState('');
@@ -93,8 +91,18 @@ const Sidebar: React.FC = () => {
   };
   
   const showToast = (message: string) => {
-    setToastMessage(message);
-    setToastOpen(true);
+    toast.error(message, {
+      position: 'top-center',
+      duration: 3000,
+      style: {
+        borderRadius: '10px',
+        background: '#fff',
+        color: '#333',
+        boxShadow: '0 3px 10px rgba(0, 0, 0, 0.1)',
+        padding: '16px',
+        maxWidth: '500px'
+      },
+    });
   };
   
   return (
@@ -324,32 +332,8 @@ const Sidebar: React.FC = () => {
         </Portal>
       </Root>
       
-      {/* Toast提示 */}
-      <ToastProvider swipeDirection="right">
-        <ToastRoot
-          className="bg-white rounded-lg shadow-lg p-4 flex items-center gap-4 border border-gray-200"
-          open={toastOpen}
-          onOpenChange={setToastOpen}
-          duration={3000}
-        >
-          <div className="flex items-center gap-3">
-            <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-              />
-            </svg>
-            <ToastTitle className="text-gray-900 font-medium">
-              {toastMessage}
-            </ToastTitle>
-          </div>
-          <Close className="rounded-full p-1 hover:bg-gray-100">
-            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </Close>
-        </ToastRoot>
-        <Viewport className="fixed bottom-4 right-4 flex flex-col gap-2 w-auto max-w-[420px] m-0 list-none z-50" />
-      </ToastProvider>
+      {/* 使用react-hot-toast的Toaster组件 */}
+      <Toaster position="top-center" />
     </div>
   );
 };

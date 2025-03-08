@@ -1,8 +1,8 @@
 import { chatEvents, useChat } from '@/context/ChatContext'
 import { Content, Description, Overlay, Portal, Root, Title } from '@radix-ui/react-dialog'
 import { Root as SeparatorRoot } from '@radix-ui/react-separator'
-import { Close, Provider, Root as ToastRoot, Title as ToastTitle, Viewport } from '@radix-ui/react-toast'
 import React, { useCallback, useEffect, useState } from 'react'
+import toast, { Toaster } from 'react-hot-toast'
 import Avatar from '../common/Avatar'
 import GroupChatHeader from '../group/GroupChatHeader'
 import GroupUserList from '../group/GroupUserList'
@@ -14,36 +14,70 @@ const contentShow = 'animate-[content-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 
 const ChatPanel: React.FC = () => {
   const { currentChat, createGroupChat, userName, setUserName } = useChat();
-  const [open, setOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
   const [nameDialogOpen, setNameDialogOpen] = useState(false);
   const [tempUserName, setTempUserName] = useState('');
 
   // 监听事件
   useEffect(() => {
     const handleError = (message: string) => {
-      setToastMessage(message);
-      setToastType('error');
-      setOpen(true);
+      toast.error(message, {
+        position: 'top-center',
+        duration: 3000,
+        style: {
+          borderRadius: '10px',
+          background: '#fff',
+          color: '#333',
+          boxShadow: '0 3px 10px rgba(0, 0, 0, 0.1)',
+          padding: '16px',
+          maxWidth: '500px'
+        },
+      });
     };
     
     const handleGroupCreated = () => {
-      setToastMessage('群聊创建成功');
-      setToastType('success');
-      setOpen(true);
+      toast.success('群聊创建成功', {
+        position: 'top-center',
+        duration: 3000,
+        style: {
+          borderRadius: '10px',
+          background: '#fff',
+          color: '#333',
+          boxShadow: '0 3px 10px rgba(0, 0, 0, 0.1)',
+          padding: '16px',
+          maxWidth: '500px'
+        },
+      });
     };
     
     const handleJoinedGroup = () => {
-      setToastMessage('成功加入群聊');
-      setToastType('success');
-      setOpen(true);
+      toast.success('成功加入群聊', {
+        position: 'top-center',
+        duration: 3000,
+        style: {
+          borderRadius: '10px',
+          background: '#fff',
+          color: '#333',
+          boxShadow: '0 3px 10px rgba(0, 0, 0, 0.1)',
+          padding: '16px',
+          maxWidth: '500px'
+        },
+      });
     };
     
     const handleLeftGroup = () => {
-      setToastMessage('已离开群聊');
-      setToastType('info');
-      setOpen(true);
+      toast('已离开群聊', {
+        position: 'top-center',
+        duration: 3000,
+        icon: '🔔',
+        style: {
+          borderRadius: '10px',
+          background: '#fff',
+          color: '#333',
+          boxShadow: '0 3px 10px rgba(0, 0, 0, 0.1)',
+          padding: '16px',
+          maxWidth: '500px'
+        },
+      });
     };
     
     chatEvents.on('error', handleError);
@@ -73,9 +107,18 @@ const ChatPanel: React.FC = () => {
       setNameDialogOpen(false);
       createGroupChat?.();
     } else {
-      setToastMessage('请输入有效的用户名');
-      setToastType('error');
-      setOpen(true);
+      toast.error('请输入有效的用户名', {
+        position: 'top-center',
+        duration: 3000,
+        style: {
+          borderRadius: '10px',
+          background: '#fff',
+          color: '#333',
+          boxShadow: '0 3px 10px rgba(0, 0, 0, 0.1)',
+          padding: '16px',
+          maxWidth: '500px'
+        },
+      });
     }
   };
 
@@ -138,48 +181,8 @@ const ChatPanel: React.FC = () => {
           </Portal>
         </Root>
 
-        <Provider swipeDirection="right">
-          <ToastRoot
-            className={`bg-white rounded-lg shadow-lg p-4 flex items-center gap-4 border ${
-              toastType === 'success' ? 'border-green-200' : 
-              toastType === 'error' ? 'border-red-200' : 'border-gray-200'
-            }`}
-            open={open}
-            onOpenChange={setOpen}
-            duration={3000}
-          >
-            <div className="flex items-center gap-3">
-              {toastType === 'success' && (
-                <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              )}
-              {toastType === 'error' && (
-                <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-                  />
-                </svg>
-              )}
-              {toastType === 'info' && (
-                <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-                  />
-                </svg>
-              )}
-              <ToastTitle className="text-gray-900 font-medium">
-                {toastMessage}
-              </ToastTitle>
-            </div>
-            <Close className="rounded-full p-1 hover:bg-gray-100">
-              <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </Close>
-          </ToastRoot>
-          <Viewport className="fixed bottom-4 right-4 flex flex-col gap-2 w-auto max-w-[420px] m-0 list-none z-50" />
-        </Provider>
+        {/* 使用react-hot-toast的Toaster组件 */}
+        <Toaster position="top-center" />
       </div>
     );
   }
@@ -218,48 +221,8 @@ const ChatPanel: React.FC = () => {
         </>
       )}
       
-      <Provider swipeDirection="right">
-        <ToastRoot
-          className={`bg-white rounded-lg shadow-lg p-4 flex items-center gap-4 border ${
-            toastType === 'success' ? 'border-green-200' : 
-            toastType === 'error' ? 'border-red-200' : 'border-gray-200'
-          }`}
-          open={open}
-          onOpenChange={setOpen}
-          duration={3000}
-        >
-          <div className="flex items-center gap-3">
-            {toastType === 'success' && (
-              <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            )}
-            {toastType === 'error' && (
-              <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-                />
-              </svg>
-            )}
-            {toastType === 'info' && (
-              <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-                />
-              </svg>
-            )}
-            <ToastTitle className="text-gray-900 font-medium">
-              {toastMessage}
-            </ToastTitle>
-          </div>
-          <Close className="rounded-full p-1 hover:bg-gray-100">
-            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </Close>
-        </ToastRoot>
-        <Viewport className="fixed bottom-4 right-4 flex flex-col gap-2 w-auto max-w-[420px] m-0 list-none z-50" />
-      </Provider>
+      {/* 使用react-hot-toast的Toaster组件 */}
+      <Toaster position="top-center" />
     </div>
   );
 };

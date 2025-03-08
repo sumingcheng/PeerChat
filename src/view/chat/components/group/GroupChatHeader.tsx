@@ -11,21 +11,31 @@ import {
   Trigger as AlertDialogTrigger
 } from '@radix-ui/react-alert-dialog'
 import { Content, Description, Overlay, Portal, Root, Title, Trigger } from '@radix-ui/react-dialog'
-import { Close, Provider, Root as ToastRoot, Title as ToastTitle, Viewport } from '@radix-ui/react-toast'
 import React, { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 
 const overlayShow = 'animate-[overlay-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 const contentShow = 'animate-[content-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 
 const GroupChatHeader: React.FC = () => {
   const { currentChat, copyShareLink, leaveCurrentChat } = useChat();
-  const [open, setOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
   
   useEffect(() => {
     const handleLinkCopied = () => {
-      setOpen(true);
+      toast.success('邀请链接已复制', {
+        position: 'top-center',
+        duration: 3000,
+        style: {
+          borderRadius: '10px',
+          background: '#fff',
+          color: '#333',
+          boxShadow: '0 3px 10px rgba(0, 0, 0, 0.1)',
+          padding: '16px',
+          maxWidth: '500px'
+        },
+      });
       setDialogOpen(false);
     };
     
@@ -143,30 +153,6 @@ const GroupChatHeader: React.FC = () => {
           </AlertDialogPortal>
         </AlertDialogRoot>
       </div>
-      
-      <Provider swipeDirection="right">
-        <ToastRoot
-          className="bg-white rounded-lg shadow-lg p-4 flex items-center gap-4 border border-gray-200"
-          open={open}
-          onOpenChange={setOpen}
-          duration={3000}
-        >
-          <div className="flex items-center gap-3">
-            <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            <ToastTitle className="text-gray-900 font-medium">
-              邀请链接已复制
-            </ToastTitle>
-          </div>
-          <Close className="rounded-full p-1 hover:bg-gray-100">
-            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </Close>
-        </ToastRoot>
-        <Viewport className="fixed bottom-4 right-4 flex flex-col gap-2 w-auto max-w-[420px] m-0 list-none z-50" />
-      </Provider>
     </div>
   );
 };
