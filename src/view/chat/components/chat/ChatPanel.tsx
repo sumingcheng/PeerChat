@@ -2,7 +2,7 @@ import { chatEvents, useChat } from '@/context/ChatContext'
 import { Content, Description, Overlay, Portal, Root, Title } from '@radix-ui/react-dialog'
 import { Root as SeparatorRoot } from '@radix-ui/react-separator'
 import React, { useCallback, useEffect, useState } from 'react'
-import toast, { Toaster } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 import GroupChatHeader from '../group/GroupChatHeader'
 import GroupUserList from '../group/GroupUserList'
 import ChatInput from '../input/ChatInput'
@@ -19,64 +19,19 @@ const ChatPanel: React.FC = () => {
   // 监听事件
   useEffect(() => {
     const handleError = (message: string) => {
-      toast.error(message, {
-        position: 'top-center',
-        duration: 3000,
-        style: {
-          borderRadius: '10px',
-          background: '#fff',
-          color: '#333',
-          boxShadow: '0 3px 10px rgba(0, 0, 0, 0.1)',
-          padding: '16px',
-          maxWidth: '500px'
-        },
-      });
+      toast.error(message);
     };
     
     const handleGroupCreated = () => {
-      toast.success('群聊创建成功', {
-        position: 'top-center',
-        duration: 3000,
-        style: {
-          borderRadius: '10px',
-          background: '#fff',
-          color: '#333',
-          boxShadow: '0 3px 10px rgba(0, 0, 0, 0.1)',
-          padding: '16px',
-          maxWidth: '500px'
-        },
-      });
+      toast.success('群聊创建成功');
     };
     
     const handleJoinedGroup = () => {
-      toast.success('成功加入群聊', {
-        position: 'top-center',
-        duration: 3000,
-        style: {
-          borderRadius: '10px',
-          background: '#fff',
-          color: '#333',
-          boxShadow: '0 3px 10px rgba(0, 0, 0, 0.1)',
-          padding: '16px',
-          maxWidth: '500px'
-        },
-      });
+      toast.success('成功加入群聊');
     };
     
     const handleLeftGroup = () => {
-      toast('已离开群聊', {
-        position: 'top-center',
-        duration: 3000,
-        icon: '🔔',
-        style: {
-          borderRadius: '10px',
-          background: '#fff',
-          color: '#333',
-          boxShadow: '0 3px 10px rgba(0, 0, 0, 0.1)',
-          padding: '16px',
-          maxWidth: '500px'
-        },
-      });
+      toast('已离开群聊', { icon: '🔔' });
     };
     
     chatEvents.on('error', handleError);
@@ -106,18 +61,7 @@ const ChatPanel: React.FC = () => {
       setNameDialogOpen(false);
       createGroupChat?.();
     } else {
-      toast.error('请输入有效的用户名', {
-        position: 'top-center',
-        duration: 3000,
-        style: {
-          borderRadius: '10px',
-          background: '#fff',
-          color: '#333',
-          boxShadow: '0 3px 10px rgba(0, 0, 0, 0.1)',
-          padding: '16px',
-          maxWidth: '500px'
-        },
-      });
+      toast.error('请输入有效的用户名');
     }
   };
 
@@ -179,9 +123,6 @@ const ChatPanel: React.FC = () => {
             </Content>
           </Portal>
         </Root>
-
-        {/* 使用react-hot-toast的Toaster组件 */}
-        <Toaster position="top-center" />
       </div>
     );
   }
@@ -221,9 +162,6 @@ const ChatPanel: React.FC = () => {
           <ChatInput />
         </>
       )}
-      
-      {/* 使用react-hot-toast的Toaster组件 */}
-      <Toaster position="top-center" />
     </div>
   );
 };

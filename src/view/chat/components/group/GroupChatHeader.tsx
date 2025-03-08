@@ -24,18 +24,7 @@ const GroupChatHeader: React.FC = () => {
   
   useEffect(() => {
     const handleLinkCopied = () => {
-      toast.success('邀请链接已复制', {
-        position: 'top-center',
-        duration: 3000,
-        style: {
-          borderRadius: '10px',
-          background: '#fff',
-          color: '#333',
-          boxShadow: '0 3px 10px rgba(0, 0, 0, 0.1)',
-          padding: '16px',
-          maxWidth: '500px'
-        },
-      });
+      toast.success('邀请链接已复制');
       setDialogOpen(false);
     };
     

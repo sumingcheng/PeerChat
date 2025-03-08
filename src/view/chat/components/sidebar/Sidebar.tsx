@@ -2,7 +2,7 @@ import { useChat } from '@/context/ChatContext'
 import { GroupChat } from '@/types/chat'
 import { Content, Description, Overlay, Portal, Root, Title } from '@radix-ui/react-dialog'
 import React, { useState } from 'react'
-import toast, { Toaster } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 
 const overlayShow = 'animate-[overlay-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 const contentShow = 'animate-[content-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
@@ -89,18 +89,7 @@ const Sidebar: React.FC = () => {
   };
   
   const showToast = (message: string) => {
-    toast.error(message, {
-      position: 'top-center',
-      duration: 3000,
-      style: {
-        borderRadius: '10px',
-        background: '#fff',
-        color: '#333',
-        boxShadow: '0 3px 10px rgba(0, 0, 0, 0.1)',
-        padding: '16px',
-        maxWidth: '500px'
-      },
-    });
+    toast.error(message);
   };
   
   return (
@@ -329,9 +318,6 @@ const Sidebar: React.FC = () => {
           </Content>
         </Portal>
       </Root>
-      
-      {/* 使用react-hot-toast的Toaster组件 */}
-      <Toaster position="top-center" />
     </div>
   );
 };

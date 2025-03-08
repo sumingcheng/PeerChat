@@ -21,6 +21,18 @@ const ChatPage = () => {
             padding: '16px',
             maxWidth: '500px'
           },
+          success: {
+            iconTheme: {
+              primary: '#10B981',
+              secondary: '#FFFFFF',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#EF4444',
+              secondary: '#FFFFFF',
+            },
+          },
         }}
       />
     </ChatProvider>
