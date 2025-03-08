@@ -1,0 +1,29 @@
+version: '3'
+services:
+  peerjs-server:
+    image: peerjs/peerjs-server
+    container_name: peerjs-server
+    ports:
+      - "9000:9000"
+      - "9443:9443"  # 添加HTTPS端口
+    environment:
+      - PORT=9000
+      - KEY=peerjs
+      - DEBUG=*
+      - ALLOW_DISCOVERY=false  # 设置为 true 可以启用房间发现功能
+      - PROXIED=true           # 在反向代理后面，设置为 true
+      - EXPIRE_TIMEOUT=5000    # 连接超时时间（毫秒）
+      - ALIVE_TIMEOUT=60000    # 保持连接的超时时间（毫秒）
+      - CONCURRENT_LIMIT=5000  # 并发连接数限制
+      - SECURE=true            # 启用HTTPS
+      - SSL_KEY=/ssl/privkey.pem  # SSL私钥路径
+      - SSL_CERT=/ssl/cert.pem    # SSL证书路径
+      - ALLOW_ORIGINS=https://yourdomain.com  # 限制允许的源域名
+      - USERNAME=admin         # 设置基本认证用户名
+      - PASSWORD=yourStrongPassword  # 设置基本认证密码
+    restart: always
+    volumes:
+      - ./ssl:/ssl
+    command: ["--port", "9000", "--key", "peerjs", "--proxied", "true", "--secure", "true", "--sslkey", "/ssl/privkey.pem", "--sslcert", "/ssl/cert.pem", "--allow_origins", "https://yourdomain.com", "--username", "admin", "--password", "yourStrongPassword"]
+    networks:
+      - peerjs-network
