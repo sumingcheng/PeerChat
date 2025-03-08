@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useChat } from '@/context/ChatContext'
 import ChatListItem from './ChatListItem'
 import { Root, Trigger, Portal, Overlay, Content, Title, Description } from '@radix-ui/react-dialog';
-import { Root as ToastRoot, Provider as ToastProvider, Viewport, Close } from '@radix-ui/react-toast';
+import { Root as ToastRoot, Provider as ToastProvider, Viewport, Close, Title as ToastTitle } from '@radix-ui/react-toast';
 import { GroupChat } from '@/types/chat';
 
 const overlayShow = 'animate-[overlay-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
@@ -338,9 +338,9 @@ const Sidebar: React.FC = () => {
                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
               />
             </svg>
-            <Title className="text-gray-900 font-medium">
+            <ToastTitle className="text-gray-900 font-medium">
               {toastMessage}
-            </Title>
+            </ToastTitle>
           </div>
           <Close className="rounded-full p-1 hover:bg-gray-100">
             <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

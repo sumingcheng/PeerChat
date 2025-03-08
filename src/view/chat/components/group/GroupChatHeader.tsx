@@ -1,12 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { useChat } from '@/context/ChatContext';
-import { GroupChat } from '@/types/chat';
-import { Root, Trigger, Portal, Overlay, Content, Description, Title } from '@radix-ui/react-dialog';
-import { Root as ToastRoot, Provider, Viewport, Close } from '@radix-ui/react-toast';
-import { Root as AlertDialogRoot, Trigger as AlertDialogTrigger, Portal as AlertDialogPortal, 
-  Overlay as AlertDialogOverlay, Content as AlertDialogContent, Title as AlertDialogTitle, 
-  Description as AlertDialogDescription, Action as AlertDialogAction, Cancel as AlertDialogCancel } from '@radix-ui/react-alert-dialog';
-import { chatEvents } from '@/context/ChatContext';
+import { chatEvents, useChat } from '@/context/ChatContext'
+import { GroupChat } from '@/types/chat'
+import {
+  Action as AlertDialogAction, Cancel as AlertDialogCancel,
+  Content as AlertDialogContent,
+  Description as AlertDialogDescription,
+  Overlay as AlertDialogOverlay,
+  Portal as AlertDialogPortal,
+  Root as AlertDialogRoot,
+  Title as AlertDialogTitle,
+  Trigger as AlertDialogTrigger
+} from '@radix-ui/react-alert-dialog'
+import { Content, Description, Overlay, Portal, Root, Title, Trigger } from '@radix-ui/react-dialog'
+import { Close, Provider, Root as ToastRoot, Title as ToastTitle, Viewport } from '@radix-ui/react-toast'
+import React, { useEffect, useState } from 'react'
 
 const overlayShow = 'animate-[overlay-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 const contentShow = 'animate-[content-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
@@ -149,9 +155,9 @@ const GroupChatHeader: React.FC = () => {
             <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            <Title className="text-gray-900 font-medium">
+            <ToastTitle className="text-gray-900 font-medium">
               邀请链接已复制
-            </Title>
+            </ToastTitle>
           </div>
           <Close className="rounded-full p-1 hover:bg-gray-100">
             <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

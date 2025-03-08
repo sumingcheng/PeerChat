@@ -1,15 +1,13 @@
-import { useChat } from '@/context/ChatContext'
+import { chatEvents, useChat } from '@/context/ChatContext'
+import { Content, Description, Overlay, Portal, Root, Title } from '@radix-ui/react-dialog'
 import { Root as SeparatorRoot } from '@radix-ui/react-separator'
-import { Close, Provider, Title, Root as ToastRoot, Viewport } from '@radix-ui/react-toast'
-import React, { useCallback, useState, useEffect } from 'react'
-import { Root, Trigger, Portal, Overlay, Content, Description } from '@radix-ui/react-dialog'
+import { Close, Provider, Root as ToastRoot, Title as ToastTitle, Viewport } from '@radix-ui/react-toast'
+import React, { useCallback, useEffect, useState } from 'react'
 import Avatar from '../common/Avatar'
-import ChatInput from '../input/ChatInput'
-import MessageList from './MessageList'
 import GroupChatHeader from '../group/GroupChatHeader'
 import GroupUserList from '../group/GroupUserList'
-import { GroupChat } from '@/types/chat'
-import { chatEvents } from '@/context/ChatContext'
+import ChatInput from '../input/ChatInput'
+import MessageList from './MessageList'
 
 const overlayShow = 'animate-[overlay-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 const contentShow = 'animate-[content-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
@@ -19,7 +17,6 @@ const ChatPanel: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [nameDialogOpen, setNameDialogOpen] = useState(false);
   const [tempUserName, setTempUserName] = useState('');
 
@@ -171,9 +168,9 @@ const ChatPanel: React.FC = () => {
                   />
                 </svg>
               )}
-              <Title className="text-gray-900 font-medium">
+              <ToastTitle className="text-gray-900 font-medium">
                 {toastMessage}
-              </Title>
+              </ToastTitle>
             </div>
             <Close className="rounded-full p-1 hover:bg-gray-100">
               <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -251,9 +248,9 @@ const ChatPanel: React.FC = () => {
                 />
               </svg>
             )}
-            <Title className="text-gray-900 font-medium">
+            <ToastTitle className="text-gray-900 font-medium">
               {toastMessage}
-            </Title>
+            </ToastTitle>
           </div>
           <Close className="rounded-full p-1 hover:bg-gray-100">
             <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
