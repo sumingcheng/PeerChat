@@ -5,11 +5,16 @@ export interface Sender {
 
 export interface Message {
   id: string
+  sender: string
   content: string
-  time: string
-  status: 'sending' | 'sent' | 'failed'
-  senderId: string
-  sender: Sender
+  timestamp: number
+  senderName?: string
+}
+
+export interface User {
+  id: string
+  name: string
+  avatar?: string
 }
 
 export interface LastMessage {
@@ -21,19 +26,39 @@ export interface Chat {
   id: string
   name: string
   avatar?: string
-  unreadCount?: number
-  lastMessage?: LastMessage
+  isGroup?: boolean
+  participants?: User[]
+  lastMessage?: string
+  lastMessageTime?: number
+}
+
+export interface GroupChat extends Chat {
+  isGroup: true
+  roomId: string
+  isHost: boolean
+  shareLink: string
+  users: User[]
 }
 
 export interface ChatContextType {
   currentChat: Chat | null
-  setCurrentChat: React.Dispatch<React.SetStateAction<Chat | null>>
+  setCurrentChat: (chat: Chat | null) => void
   chats: Chat[]
-  setChats: React.Dispatch<React.SetStateAction<Chat[]>>
+  setChats: (chats: Chat[]) => void
   messages: Message[]
-  setMessages: React.Dispatch<React.SetStateAction<Message[]>>
+  setMessages: (messages: Message[]) => void
   loading: boolean
-  setLoading: React.Dispatch<React.SetStateAction<boolean>>
+  setLoading: (loading: boolean) => void
+  
+  // PeerJS群聊相关
+  userId?: string
+  userName?: string
+  setUserName?: (name: string) => void
+  createGroupChat?: () => void
+  joinGroupChat?: (roomId: string) => void
+  sendMessage?: (content: string) => void
+  leaveCurrentChat?: () => void
+  copyShareLink?: () => void
 }
 
 export type AvatarSize = 'sm' | 'md' | 'lg'

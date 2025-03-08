@@ -2,42 +2,33 @@ import React, { useState } from 'react';
 import { useChat } from '@/context/ChatContext';
 
 const ChatInput: React.FC = () => {
+  const { sendMessage } = useChat();
   const [message, setMessage] = useState('');
-  const { setMessages } = useChat();
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim()) return;
-
-    const newMessage = {
-      id: Date.now().toString(),
-      content: message,
-      time: new Date().toLocaleTimeString(),
-      status: 'sending' as const,
-      senderId: 'currentUser',
-      sender: {
-        name: '当前用户',
-        avatar: '/default-avatar.png'
-      }
-    };
-
-    setMessages(prev => [...prev, newMessage]);
-    setMessage('');
+    if (message.trim() && sendMessage) {
+      sendMessage(message);
+      setMessage('');
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 border-t">
-      <div className="flex items-center space-x-2">
+    <form 
+      onSubmit={handleSendMessage}
+      className="p-4 bg-white border-t border-gray-200"
+    >
+      <div className="flex items-center">
         <input
           type="text"
-          value={message}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMessage(e.target.value)}
           placeholder="输入消息..."
-          className="flex-1 px-4 py-2 rounded-lg border focus:outline-none focus:border-blue-500"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          className="flex-1 px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
         <button
           type="submit"
-          className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none"
+          className="px-4 py-2 bg-blue-500 text-white rounded-r-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
           发送
         </button>
