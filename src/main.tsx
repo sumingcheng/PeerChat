@@ -1,17 +1,12 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { BrowserRouter, HashRouter } from 'react-router-dom'
-import App from './App'
+import { RouterProvider } from 'react-router-dom'
+import { router } from './router'
 import './index.css'
 
-// 在生产环境使用 HashRouter，开发环境使用 BrowserRouter
-// HashRouter 更适合 GitHub Pages，因为它使用 URL 哈希来管理路由
-const Router = import.meta.env.PROD ? HashRouter : BrowserRouter;
-
+// 使用RouterProvider和createHashRouter确保在GitHub Pages上正常工作
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <Router>
-      <App />
-    </Router>
+    <RouterProvider router={router} />
   </React.StrictMode>,
 )

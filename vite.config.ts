@@ -16,7 +16,8 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'),
       }
     },
-    copyPublicDir: true
+    copyPublicDir: true,
+    sourcemap: true
   },
   plugins: [
     react(),
@@ -46,5 +47,5 @@ export default defineConfig({
       },
     },
   },
-  base: process.env.NODE_ENV === 'production' ? '/PeerChat/' : '/',
+  base: '/PeerChat/',
 }) 
