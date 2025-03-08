@@ -6,7 +6,7 @@ import ChatPanel from './view/chat/components/chat/ChatPanel';
 const App: React.FC = () => {
   return (
     <>
-      <Toaster position="top-right" />
+      <Toaster position="top-center" />
       <ChatLayout>
         <ChatPanel />
       </ChatLayout>
