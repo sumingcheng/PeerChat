@@ -12,9 +12,10 @@ const overlayShow = 'animate-[overlay-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 const contentShow = 'animate-[content-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 
 const ChatPanel: React.FC = () => {
-  const { currentChat, createGroupChat, userName, setUserName } = useChat();
+  const { currentChat, createGroupChat, userName, setUserName, isConnecting } = useChat();
   const [nameDialogOpen, setNameDialogOpen] = useState(false);
   const [tempUserName, setTempUserName] = useState('');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // 首次加载时检查是否已设置用户名
   useEffect(() => {
@@ -27,7 +28,13 @@ const ChatPanel: React.FC = () => {
   // 监听事件
   useEffect(() => {
     const handleError = (message: string) => {
+      setErrorMessage(message);
       toast.error(message);
+      
+      // 5秒后清除错误消息
+      setTimeout(() => {
+        setErrorMessage(null);
+      }, 5000);
     };
     
     const handleGroupCreated = () => {
@@ -83,13 +90,42 @@ const ChatPanel: React.FC = () => {
           {userName && (
             <p className="text-sm text-blue-500">当前用户: {userName}</p>
           )}
+          
+          {/* 显示错误消息 */}
+          {errorMessage && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
+              <div className="flex items-center">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+                  />
+                </svg>
+                <span>{errorMessage}</span>
+              </div>
+            </div>
+          )}
+          
+          {/* 显示连接状态 */}
+          {isConnecting && (
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md text-blue-600 text-sm">
+              <div className="flex items-center">
+                <svg className="w-5 h-5 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>正在连接中，请稍候...</span>
+              </div>
+            </div>
+          )}
         </div>
         
         <div className="flex space-x-4">
           <button
             onClick={handleCreateGroupChat}
-            className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 
-              transition-colors duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl"
+            disabled={isConnecting}
+            className={`px-6 py-3 bg-blue-500 text-white rounded-lg 
+              transition-colors duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl
+              ${isConnecting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'}`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
@@ -102,8 +138,10 @@ const ChatPanel: React.FC = () => {
           {userName && (
             <button
               onClick={() => setNameDialogOpen(true)}
-              className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 
-                transition-colors duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl"
+              disabled={isConnecting}
+              className={`px-6 py-3 bg-gray-100 text-gray-700 rounded-lg 
+                transition-colors duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl
+                ${isConnecting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200'}`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
@@ -180,6 +218,33 @@ const ChatPanel: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col">
+      {/* 显示错误消息 */}
+      {errorMessage && (
+        <div className="p-3 bg-red-50 border-b border-red-200 text-red-600 text-sm">
+          <div className="flex items-center">
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+              />
+            </svg>
+            <span>{errorMessage}</span>
+          </div>
+        </div>
+      )}
+      
+      {/* 显示连接状态 */}
+      {isConnecting && (
+        <div className="p-3 bg-blue-50 border-b border-blue-200 text-blue-600 text-sm">
+          <div className="flex items-center">
+            <svg className="w-5 h-5 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>正在连接中，请稍候...</span>
+          </div>
+        </div>
+      )}
+      
       {isGroupChat ? (
         // 群聊界面
         <>

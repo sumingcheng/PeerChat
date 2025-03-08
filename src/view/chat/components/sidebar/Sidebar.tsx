@@ -1,14 +1,14 @@
 import { useChat } from '@/context/ChatContext'
 import { GroupChat } from '@/types/chat'
 import { Content, Description, Overlay, Portal, Root, Title } from '@radix-ui/react-dialog'
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 
 const overlayShow = 'animate-[overlay-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 const contentShow = 'animate-[content-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 
 const Sidebar: React.FC = () => {
-  const { chats, currentChat, setCurrentChat, createGroupChat, userName, setUserName, joinGroupChat } = useChat();
+  const { chats, currentChat, setCurrentChat, createGroupChat, userName, setUserName, joinGroupChat, isConnecting } = useChat();
   const [nameDialogOpen, setNameDialogOpen] = useState(false);
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
   const [tempUserName, setTempUserName] = useState('');
@@ -22,6 +22,19 @@ const Sidebar: React.FC = () => {
       setNameDialogOpen(true);
     }
   }, [roomIdToJoin, userName]);
+  
+  // 清理 roomId 的辅助函数
+  const cleanRoomId = (id: string): string => {
+    // 移除可能导致连接问题的字符，如重复的 ID 部分 (hwW6wz-hwW6wz)
+    if (id.includes('-')) {
+      const parts = id.split('-');
+      // 如果破折号两边的部分相同，只返回一部分
+      if (parts[0] === parts[1]) {
+        return parts[0];
+      }
+    }
+    return id;
+  };
   
   const handleCreateGroupChat = () => {
     if (!userName) {
@@ -38,7 +51,8 @@ const Sidebar: React.FC = () => {
       
       // 如果有待加入的房间ID，则加入
       if (roomIdToJoin) {
-        joinGroupChat?.(roomIdToJoin);
+        const cleanedId = cleanRoomId(roomIdToJoin);
+        joinGroupChat?.(cleanedId);
         setRoomIdToJoin('');
       }
     } else {
@@ -53,9 +67,29 @@ const Sidebar: React.FC = () => {
     }
     
     if (roomIdToJoin.trim()) {
-      joinGroupChat?.(roomIdToJoin);
-      setJoinDialogOpen(false);
-      setRoomIdToJoin('');
+      // 检查输入是否是URL
+      if (roomIdToJoin.startsWith('http')) {
+        try {
+          const url = new URL(roomIdToJoin);
+          const roomId = url.searchParams.get('roomId');
+          if (roomId) {
+            const cleanedId = cleanRoomId(roomId);
+            joinGroupChat?.(cleanedId);
+            setJoinDialogOpen(false);
+            setRoomIdToJoin('');
+          } else {
+            showToast('无效的邀请链接，未找到roomId参数');
+          }
+        } catch (error) {
+          showToast('无效的URL格式');
+        }
+      } else {
+        // 直接作为roomId使用，但先清理格式
+        const cleanedId = cleanRoomId(roomIdToJoin);
+        joinGroupChat?.(cleanedId);
+        setJoinDialogOpen(false);
+        setRoomIdToJoin('');
+      }
     } else {
       showToast('请输入有效的群聊ID或链接');
     }
@@ -73,20 +107,21 @@ const Sidebar: React.FC = () => {
     }
     
     try {
-      const urlObj = new URL(urlInput);
-      const roomId = urlObj.searchParams.get('roomId');
+      const url = new URL(urlInput);
+      const roomId = url.searchParams.get('roomId');
       
       if (roomId) {
-        setRoomIdToJoin(roomId);
+        const cleanedId = cleanRoomId(roomId);
+        setRoomIdToJoin(cleanedId); // 保存清理后的roomId
         setUrlInputDialogOpen(false);
         
         if (!userName) {
           setNameDialogOpen(true);
         } else {
-          joinGroupChat?.(roomId);
+          joinGroupChat?.(cleanedId);
         }
       } else {
-        showToast('无效的邀请链接');
+        showToast('无效的邀请链接，未找到roomId参数');
       }
     } catch (error) {
       showToast('无效的URL格式');
@@ -187,6 +222,10 @@ const Sidebar: React.FC = () => {
                           <span className="text-xs text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded-full">
                             群聊 · {(chat as GroupChat).users.length}人
                           </span>
+                          {/* 显示群聊ID，方便调试 */}
+                          <span className="ml-1 text-xs text-gray-400">
+                            ID: {chat.id.substring(0, 6)}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -201,17 +240,35 @@ const Sidebar: React.FC = () => {
       <div className="p-4 flex space-x-2">
         <button
           onClick={handleCreateGroupChat}
-          className="flex-1 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center justify-center"
+          disabled={isConnecting}
+          className={`flex-1 py-2 bg-blue-500 text-white rounded-md 
+            flex items-center justify-center
+            ${isConnecting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'}`}
         >
-          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          创建群聊
+          {isConnecting ? (
+            <>
+              <svg className="w-4 h-4 mr-1 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              处理中...
+            </>
+          ) : (
+            <>
+              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              创建群聊
+            </>
+          )}
         </button>
         
         <button
           onClick={() => setJoinDialogOpen(true)}
-          className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 flex items-center justify-center"
+          disabled={isConnecting}
+          className={`flex-1 py-2 bg-gray-100 text-gray-700 rounded-md 
+            flex items-center justify-center
+            ${isConnecting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200'}`}
         >
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
@@ -300,6 +357,17 @@ const Sidebar: React.FC = () => {
               className="w-full px-3 py-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
               autoFocus
             />
+            {/* 添加提示信息 */}
+            {roomIdToJoin.includes('-') && (
+              <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-700 text-xs">
+                <svg className="inline-block w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+                  />
+                </svg>
+                检测到ID包含破折号，这可能导致连接问题。系统将尝试自动修复。
+              </div>
+            )}
             <div className="flex justify-between">
               <button
                 onClick={handleJoinFromUrl}
@@ -316,9 +384,19 @@ const Sidebar: React.FC = () => {
                 </button>
                 <button
                   onClick={handleJoinGroupChat}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                  disabled={isConnecting}
+                  className={`px-4 py-2 bg-blue-500 text-white rounded-md 
+                    ${isConnecting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'}`}
                 >
-                  加入
+                  {isConnecting ? (
+                    <span className="flex items-center">
+                      <svg className="w-4 h-4 mr-1 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      连接中...
+                    </span>
+                  ) : '加入'}
                 </button>
               </div>
             </div>
@@ -356,7 +434,9 @@ const Sidebar: React.FC = () => {
               </button>
               <button
                 onClick={processUrlInput}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                disabled={isConnecting}
+                className={`px-4 py-2 bg-blue-500 text-white rounded-md 
+                  ${isConnecting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'}`}
               >
                 确定
               </button>

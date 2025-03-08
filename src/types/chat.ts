@@ -59,6 +59,7 @@ export interface ChatContextType {
   sendMessage?: (content: string) => void
   leaveCurrentChat?: () => void
   copyShareLink?: () => void
+  isConnecting: boolean
 }
 
 export type AvatarSize = 'sm' | 'md' | 'lg'
