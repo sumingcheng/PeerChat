@@ -4,6 +4,7 @@ import { Content, Description, Overlay, Portal, Root, Title } from '@radix-ui/re
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 
+// 动画常量
 const overlayShow = 'animate-[overlay-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 const contentShow = 'animate-[content-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 
@@ -105,7 +106,10 @@ const Sidebar: React.FC = () => {
         }
         
         // 显示正在连接的提示
-        toast.loading('正在连接群聊...', { id: 'connecting' });
+        toast.loading('正在连接群聊...', { 
+          id: 'connecting',
+          duration: 10000 // 设置较长的持续时间，避免自动消失
+        });
         
         // 调用加入群聊的函数
         joinGroupChat?.(cleanedId);
@@ -114,7 +118,7 @@ const Sidebar: React.FC = () => {
         setJoinDialogOpen(false);
         setRoomIdToJoin('');
         
-        // 3秒后如果没有成功事件，显示可能的连接问题
+        // 5秒后如果没有成功事件，显示可能的连接问题
         setTimeout(() => {
           // 检查是否已经加入了该群聊
           const joined = chats.some(chat => chat.id === cleanedId);
@@ -125,7 +129,7 @@ const Sidebar: React.FC = () => {
               duration: 5000
             });
           }
-        }, 3000);
+        }, 5000);
       } catch (error) {
         showToast('连接失败，请检查ID是否正确');
         console.error('Join group error:', error);
@@ -196,6 +200,7 @@ const Sidebar: React.FC = () => {
           type="text"
           placeholder="搜索聊天..."
           className="w-full px-4 py-2 rounded-lg bg-gray-100 focus:outline-none"
+          disabled={isConnecting}
         />
         {userName && (
           <div className="ml-2 text-sm text-gray-500 flex items-center">
@@ -208,6 +213,7 @@ const Sidebar: React.FC = () => {
               }}
               className="ml-1 p-1 text-gray-400 hover:text-gray-600"
               title="修改用户名"
+              disabled={isConnecting}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
@@ -221,19 +227,39 @@ const Sidebar: React.FC = () => {
       
       <div className="flex-1 overflow-y-auto">
         <div className="p-4">
-          <h2 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-            最近聊天
+          <h2 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2 flex items-center justify-between">
+            <span>最近聊天</span>
+            {isConnecting && (
+              <span className="text-blue-500 text-xs flex items-center">
+                <svg className="w-3 h-3 mr-1 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                连接中
+              </span>
+            )}
           </h2>
           
           {chats.length === 0 ? (
             <div className="text-center py-4 text-gray-400 text-sm">
-              暂无聊天记录
+              {isConnecting ? (
+                <div className="flex flex-col items-center py-8">
+                  <svg className="w-8 h-8 mb-2 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <p>正在连接中...</p>
+                </div>
+              ) : (
+                <p>暂无聊天记录</p>
+              )}
             </div>
           ) : (
             <div className="space-y-1">
               {chats.map(chat => {
                 const isActive = currentChat?.id === chat.id;
                 const isGroup = chat.isGroup;
+                const chatIsConnecting = isConnecting && isActive;
                 
                 return (
                   <div
@@ -243,7 +269,7 @@ const Sidebar: React.FC = () => {
                       isActive ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-100'
                     }`}
                   >
-                    <div className="w-10 h-10 rounded-full bg-gray-300 flex-shrink-0 flex items-center justify-center text-white">
+                    <div className="w-10 h-10 rounded-full bg-gray-300 flex-shrink-0 flex items-center justify-center text-white relative">
                       {isGroup ? (
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
@@ -253,11 +279,23 @@ const Sidebar: React.FC = () => {
                       ) : (
                         chat.name.charAt(0).toUpperCase()
                       )}
+                      
+                      {/* 连接中状态指示器 */}
+                      {chatIsConnecting && (
+                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white">
+                          <div className="absolute inset-0 bg-blue-500 rounded-full animate-ping opacity-75"></div>
+                        </div>
+                      )}
                     </div>
                     
                     <div className="ml-3 flex-1 overflow-hidden">
                       <div className="flex items-center justify-between">
-                        <p className="font-medium truncate">{chat.name}</p>
+                        <p className="font-medium truncate">
+                          {chat.name}
+                          {chatIsConnecting && (
+                            <span className="ml-1 text-xs text-blue-500">(连接中...)</span>
+                          )}
+                        </p>
                         {chat.lastMessageTime && (
                           <span className="text-xs text-gray-500">
                             {new Date(chat.lastMessageTime).toLocaleTimeString([], { 

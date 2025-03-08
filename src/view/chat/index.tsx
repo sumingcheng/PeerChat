@@ -1,8 +1,11 @@
 import { Toaster } from 'react-hot-toast';
 import ChatLayout from './components/layout/ChatLayout';
 import ChatPanel from './components/chat/ChatPanel';
+import useChatStore from '@/store/useChatStore';
 
 const ChatPage = () => {
+  const isConnecting = useChatStore(state => state.isConnecting);
+  
   return (
     <>
       <ChatLayout>
@@ -29,13 +32,19 @@ const ChatPage = () => {
               background: '#EFF6FF',
               color: '#1E40AF',
               borderColor: '#93C5FD',
+              borderLeft: '4px solid #3B82F6',
             },
-            duration: 10000,
+            duration: 30000,
           },
           success: {
             iconTheme: {
               primary: '#10B981',
               secondary: '#FFFFFF',
+            },
+            style: {
+              background: '#ECFDF5',
+              color: '#065F46',
+              borderLeft: '4px solid #10B981',
             },
           },
           error: {
@@ -52,6 +61,12 @@ const ChatPage = () => {
           },
         }}
       />
+      
+      {isConnecting && (
+        <div className="fixed top-0 left-0 w-full h-1 bg-blue-100 z-50">
+          <div className="h-full bg-blue-500 animate-pulse"></div>
+        </div>
+      )}
     </>
   );
 };

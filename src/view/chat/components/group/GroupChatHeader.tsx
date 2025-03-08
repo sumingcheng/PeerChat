@@ -16,6 +16,7 @@ import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import Avatar from '../common/Avatar'
 
+// 动画常量
 const overlayShow = 'animate-[overlay-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 const contentShow = 'animate-[content-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 
@@ -23,12 +24,15 @@ const GroupChatHeader: React.FC = () => {
   const currentChat = useChatStore(state => state.currentChat);
   const copyShareLink = useChatStore(state => state.copyShareLink);
   const leaveCurrentChat = useChatStore(state => state.leaveCurrentChat);
+  const isConnecting = useChatStore(state => state.isConnecting);
   
   const [dialogOpen, setDialogOpen] = useState(false);
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
   
   useEffect(() => {
     const handleLinkCopied = () => {
+      setIsCopying(false);
       toast.success('邀请链接已复制');
       setDialogOpen(false);
     };
@@ -45,7 +49,12 @@ const GroupChatHeader: React.FC = () => {
   const groupChat = currentChat as GroupChat;
   
   const handleCopyLink = () => {
+    setIsCopying(true);
     copyShareLink?.();
+    // 如果3秒后还没收到linkCopied事件，重置状态
+    setTimeout(() => {
+      setIsCopying(false);
+    }, 3000);
   };
   
   const handleLeaveChat = () => {
@@ -59,14 +68,25 @@ const GroupChatHeader: React.FC = () => {
         <Avatar alt={groupChat.name} size="md" />
         <div className="ml-3">
           <h2 className="font-medium">{groupChat.name}</h2>
-          <p className="text-xs text-gray-500">{groupChat.users.length} 位成员</p>
+          <p className="text-xs text-gray-500">
+            {groupChat.users.length} 位成员
+            {isConnecting && (
+              <span className="ml-2 inline-flex items-center text-blue-500">
+                <svg className="w-3 h-3 mr-1 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                连接中
+              </span>
+            )}
+          </p>
         </div>
       </div>
       
       <div className="flex items-center space-x-2">
         <Root open={dialogOpen} onOpenChange={setDialogOpen}>
           <Trigger asChild>
-            <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-full">
+            <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-full" disabled={isConnecting}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                   d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" 
@@ -91,9 +111,19 @@ const GroupChatHeader: React.FC = () => {
                 />
                 <button 
                   onClick={handleCopyLink}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-r-md hover:bg-blue-600"
+                  disabled={isCopying}
+                  className={`px-4 py-2 bg-blue-500 text-white rounded-r-md hover:bg-blue-600 flex items-center justify-center min-w-[80px]
+                    ${isCopying ? 'opacity-75' : ''}`}
                 >
-                  复制
+                  {isCopying ? (
+                    <>
+                      <svg className="w-4 h-4 mr-1 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      复制中
+                    </>
+                  ) : '复制'}
                 </button>
               </div>
               <div className="flex justify-end">
@@ -112,6 +142,7 @@ const GroupChatHeader: React.FC = () => {
           <AlertDialogTrigger asChild>
             <button 
               className="p-2 text-red-500 hover:bg-red-50 rounded-full"
+              disabled={isConnecting}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 

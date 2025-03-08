@@ -3,12 +3,16 @@ export interface Sender {
   avatar: string
 }
 
+// 定义可能的消息状态类型
+export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read' | 'error' | undefined;
+
 export interface Message {
   id: string
   sender: string
   content: string
   timestamp: string
   senderName?: string
+  status?: MessageStatus
 }
 
 export interface User {
@@ -84,4 +88,5 @@ export interface ChatListItemProps {
   isActive?: boolean
   onClick: () => void
   unreadCount?: number
+  isConnecting?: boolean
 } 

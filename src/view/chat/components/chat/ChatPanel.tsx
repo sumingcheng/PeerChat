@@ -9,6 +9,7 @@ import GroupUserList from '../group/GroupUserList'
 import ChatInput from '../input/ChatInput'
 import MessageList from './MessageList'
 
+// 动画常量
 const overlayShow = 'animate-[overlay-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 const contentShow = 'animate-[content-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 
@@ -51,6 +52,9 @@ const ChatPanel: React.FC = () => {
           </div>, 
           { duration: 5000 }
         );
+        
+        // 清除连接中状态
+        toast.dismiss('connecting');
       } else {
         toast.error(message);
       }
@@ -74,16 +78,22 @@ const ChatPanel: React.FC = () => {
       toast('已离开群聊', { icon: '🔔' });
     };
     
+    const handleConnecting = (peerId: string) => {
+      toast.loading(`正在连接到节点 ${peerId}...`, { id: 'connecting' });
+    };
+    
     chatEvents.on('error', handleError);
     chatEvents.on('groupCreated', handleGroupCreated);
     chatEvents.on('joinedGroup', handleJoinedGroup);
     chatEvents.on('leftGroup', handleLeftGroup);
+    chatEvents.on('connecting', handleConnecting);
     
     return () => {
       chatEvents.off('error', handleError);
       chatEvents.off('groupCreated', handleGroupCreated);
       chatEvents.off('joinedGroup', handleJoinedGroup);
       chatEvents.off('leftGroup', handleLeftGroup);
+      chatEvents.off('connecting', handleConnecting);
     };
   }, []);
 
@@ -255,7 +265,7 @@ const ChatPanel: React.FC = () => {
       {errorMessage && (
         <div className="p-3 bg-red-50 border-b border-red-200 text-red-600 text-sm">
           <div className="flex items-center">
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                 d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
               />
@@ -277,7 +287,7 @@ const ChatPanel: React.FC = () => {
       {isConnecting && (
         <div className="p-3 bg-blue-50 border-b border-blue-200 text-blue-600 text-sm">
           <div className="flex items-center">
-            <svg className="w-5 h-5 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 mr-2 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
