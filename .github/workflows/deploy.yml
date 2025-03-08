@@ -18,13 +18,33 @@ jobs:
       - name: Setup Node.js ⚙️
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 18.19.0
+
+      - name: Setup pnpm 📦
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9.1.2  # 使用 pnpm 8.x 版本，您可以根据需要调整
+          run_install: false  # 我们将在后面手动运行安装
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies 📦
-        run: npm install
+        run: pnpm install
 
       - name: Build 🔧
-        run: npm run build
+        run: pnpm build
         env:
           NODE_ENV: production
 
