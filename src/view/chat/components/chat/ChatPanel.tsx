@@ -21,56 +21,25 @@ const ChatPanel: React.FC = () => {
   const setUserName = useChatStore(state => state.setUserName);
   const isConnecting = useChatStore(state => state.isConnecting);
   const joinGroupChat = useChatStore(state => state.joinGroupChat);
-  const setPendingRoomId = useChatStore(state => state.setPendingRoomId);
+  const pendingRoomId = useChatStore(state => state.pendingRoomId);
   const isPeerInitialized = useChatStore(state => state.isPeerInitialized);
   
   const [nameDialogOpen, setNameDialogOpen] = useState(false);
   const [tempUserName, setTempUserName] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [localPendingRoomId, setLocalPendingRoomId] = useState<string | null>(null);
 
-  // 首次加载时检查是否已设置用户名和URL中是否有roomId参数
+  // 首次加载时检查是否已设置用户名
   useEffect(() => {
-    // 检查URL中是否包含roomId参数
-    const checkUrlForRoomId = () => {
-      try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const roomId = urlParams.get('roomId');
-        
-        if (roomId) {
-          console.log('检测到URL中的roomId参数:', roomId);
-          setLocalPendingRoomId(roomId);
-          
-          // 如果用户未设置用户名，打开设置用户名对话框
-          if (!userName) {
-            setNameDialogOpen(true);
-          } else {
-            // 如果用户已设置用户名，设置待加入的群聊ID
-            setPendingRoomId(roomId);
-          }
-          
-          // 清除URL参数，避免刷新页面时重复加入
-          const newUrl = window.location.pathname;
-          window.history.replaceState({}, document.title, newUrl);
-        }
-      } catch (error) {
-        console.error('解析URL参数时出错:', error);
-      }
-    };
-    
     // 如果用户名未设置，自动打开设置用户名对话框
     if (!userName) {
       setNameDialogOpen(true);
     }
-    
-    // 检查URL参数
-    checkUrlForRoomId();
-  }, [userName, setPendingRoomId]);
+  }, [userName]);
   
-  // 当用户名设置后，如果有本地待处理的roomId，则设置到store中
+  // 当用户名设置后，如果有待处理的roomId，则加入群聊
   useEffect(() => {
-    if (userName && localPendingRoomId) {
-      console.log('用户名已设置，设置待加入的群聊:', localPendingRoomId);
+    if (userName && pendingRoomId && isPeerInitialized) {
+      console.log('用户名已设置，PeerJS已初始化，加入群聊:', pendingRoomId);
       
       // 显示正在连接的提示
       toast.loading(`正在连接到群聊...`, { 
@@ -78,16 +47,10 @@ const ChatPanel: React.FC = () => {
         duration: 20000 // 设置较长的持续时间，避免自动消失
       });
       
-      // 设置待加入的群聊ID
-      setPendingRoomId(localPendingRoomId);
-      setLocalPendingRoomId(null);
-      
-      // 如果PeerJS已初始化，直接加入群聊
-      if (isPeerInitialized) {
-        joinGroupChat?.(localPendingRoomId);
-      }
+      // 加入群聊
+      joinGroupChat?.(pendingRoomId);
     }
-  }, [userName, localPendingRoomId, setPendingRoomId, joinGroupChat, isPeerInitialized]);
+  }, [userName, pendingRoomId, joinGroupChat, isPeerInitialized]);
 
   // 监听事件
   useEffect(() => {

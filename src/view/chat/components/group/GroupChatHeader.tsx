@@ -49,12 +49,29 @@ const GroupChatHeader: React.FC = () => {
   const groupChat = currentChat as GroupChat;
   
   const handleCopyLink = () => {
+    if (!groupChat.shareLink) {
+      toast.error('无法获取分享链接');
+      return;
+    }
+    
     setIsCopying(true);
-    copyShareLink?.();
-    // 如果3秒后还没收到linkCopied事件，重置状态
-    setTimeout(() => {
+    
+    try {
+      copyShareLink?.();
+      
+      // 如果3秒后还没收到linkCopied事件，显示可能的错误
+      const timeoutId = setTimeout(() => {
+        setIsCopying(false);
+        toast.error('复制链接失败，请手动复制');
+      }, 3000);
+      
+      // 在组件卸载时清除定时器
+      return () => clearTimeout(timeoutId);
+    } catch (error) {
+      console.error('复制链接失败:', error);
       setIsCopying(false);
-    }, 3000);
+      toast.error('复制链接失败，请手动复制');
+    }
   };
   
   const handleLeaveChat = () => {

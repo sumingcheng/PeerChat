@@ -1,19 +1,39 @@
 import useChatStore from '@/store/useChatStore'
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Message from './Message'
 
 const MessageList: React.FC = () => {
   const messages = useChatStore(state => state.messages);
   const isConnecting = useChatStore(state => state.isConnecting);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
   
-  // 自动滚动到最新消息
+  // 检测用户是否在查看历史消息
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    const container = containerRef.current;
+    if (!container) return;
+    
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      // 如果用户滚动到距离底部20px以内，则认为用户在查看最新消息
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 20;
+      setShouldScrollToBottom(isNearBottom);
+    };
+    
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+  
+  // 自动滚动到最新消息，但仅当用户在查看最新消息或消息列表为空时
+  useEffect(() => {
+    if ((shouldScrollToBottom || messages.length <= 1) && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, shouldScrollToBottom]);
   
   return (
-    <div className="flex-1 p-4 overflow-y-auto">
+    <div className="flex-1 p-4 overflow-y-auto" ref={containerRef}>
       {messages.length === 0 ? (
         <div className="h-full flex items-center justify-center text-gray-400">
           {isConnecting ? (

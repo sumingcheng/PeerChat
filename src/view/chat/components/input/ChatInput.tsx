@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import useChatStore from '@/store/useChatStore';
+import toast from 'react-hot-toast';
 
 const ChatInput: React.FC = () => {
   const sendMessage = useChatStore(state => state.sendMessage);
@@ -13,12 +14,13 @@ const ChatInput: React.FC = () => {
       setIsSending(true);
       try {
         await sendMessage(message);
+        setMessage('');
       } catch (error) {
         console.error('发送消息失败:', error);
+        toast.error('发送消息失败，请重试');
       } finally {
         setIsSending(false);
       }
-      setMessage('');
     }
   };
 

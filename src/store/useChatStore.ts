@@ -3,29 +3,35 @@ import { nanoid } from 'nanoid'
 import Peer from 'peerjs'
 import { Chat, GroupChat, Message, User } from '@/types/chat'
 
-// 事件总线，用于跨组件通信
-export const chatEvents = {
-  listeners: {} as Record<string, Function[]>,
+// 创建一个简单的事件发射器类，替代Node.js的EventEmitter
+class EventEmitter {
+  private events: Record<string, Function[]> = {};
 
   on(event: string, callback: Function) {
-    if (!this.listeners[event]) {
-      this.listeners[event] = []
+    if (!this.events[event]) {
+      this.events[event] = []
     }
-    this.listeners[event].push(callback)
-  },
+    this.events[event].push(callback)
+    return this
+  }
 
   off(event: string, callback: Function) {
-    if (this.listeners[event]) {
-      this.listeners[event] = this.listeners[event].filter(cb => cb !== callback)
-    }
-  },
+    if (!this.events[event]) return this
+    this.events[event] = this.events[event].filter(cb => cb !== callback)
+    return this
+  }
 
   emit(event: string, data?: any) {
-    if (this.listeners[event]) {
-      this.listeners[event].forEach(callback => callback(data))
-    }
+    if (!this.events[event]) return this
+    this.events[event].forEach(callback => {
+      callback(data)
+    })
+    return this
   }
 }
+
+// 事件总线，用于跨组件通信
+export const chatEvents = new EventEmitter()
 
 // 定义聊天状态接口
 interface ChatState {
@@ -350,8 +356,12 @@ const useChatStore = create<ChatState>((set, get) => ({
         }
 
         set(state => ({
-          messages: [...state.messages, systemMessage]
+          messages: [...state.messages, systemMessage],
+          isConnecting: false  // 更新连接状态
         }))
+
+        // 通知UI连接已断开
+        chatEvents.emit('connectionClosed')
       })
 
     } catch (error: any) {
@@ -469,22 +479,41 @@ const useChatStore = create<ChatState>((set, get) => ({
 // 辅助函数
 
 // 清理 roomId
-function cleanRoomId(id: string): string {
-  // 移除空格
+export function cleanRoomId(id: string): string {
+  // 移除所有空格
   let cleanedId = id.trim()
 
-  // 如果是旧版本的带破折号的ID，尝试清理
+  // 如果是URL，尝试提取roomId参数
+  if (cleanedId.startsWith('http')) {
+    try {
+      const url = new URL(cleanedId)
+      const roomIdParam = url.searchParams.get('roomId')
+      if (roomIdParam) {
+        console.log(`从URL中提取roomId: ${cleanedId} -> ${roomIdParam}`)
+        cleanedId = roomIdParam.trim()
+      }
+    } catch (error) {
+      console.error('解析URL失败:', error)
+      // URL解析失败，继续使用原始输入
+    }
+  }
+
+  // 移除可能导致连接问题的字符，如重复的 ID 部分 (hwW6wz-hwW6wz)
   if (cleanedId.includes('-')) {
-    // 检查是否是旧版本的PeerJS自动生成的ID
     const parts = cleanedId.split('-')
+    // 如果破折号两边的部分相同，只返回一部分
     if (parts[0] === parts[1]) {
       console.log(`检测到重复ID格式: ${cleanedId} -> ${parts[0]}`)
-      return parts[0]
+      cleanedId = parts[0]
+    } else {
+      // 如果是其他格式的破折号，可能是 PeerJS 内部使用的格式，尝试使用第一部分
+      console.log(`检测到带破折号的ID: ${cleanedId} -> ${parts[0]}`)
+      cleanedId = parts[0]
     }
-
-    // 对于其他带破折号的ID，保留完整ID
-    console.log(`检测到带破折号的ID，保留完整ID: ${cleanedId}`)
   }
+
+  // 移除任何非字母数字字符（保留破折号和下划线）
+  cleanedId = cleanedId.replace(/[^\w\-]/g, '')
 
   return cleanedId
 }
