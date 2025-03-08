@@ -152,17 +152,21 @@ const useChatStore = create<ChatState>((set, get) => ({
     const { peer, userName } = get()
     if (!peer || !userName) return
 
+    // 使用nanoid生成不带横线的ID，长度为16
+    const groupId = nanoid(16)
+    console.log(`创建群聊，使用nanoid生成的ID: ${groupId}`)
+
     // 创建一个新的群聊
     const groupChat: GroupChat = {
-      id: peer.id,
+      id: peer.id, // 保持id为peer.id，用于标识聊天
       name: `${userName}的群聊`,
       isGroup: true,
       users: [{ id: peer.id, name: userName }],
       connections: [],
       messages: [],
-      roomId: peer.id,
+      roomId: groupId, // 使用nanoid生成的ID作为roomId
       isHost: true,
-      shareLink: `${window.location.origin}${window.location.pathname}?roomId=${peer.id}`
+      shareLink: `${window.location.origin}${window.location.pathname}?roomId=${groupId}`
     }
 
     // 添加系统消息
@@ -320,13 +324,17 @@ const useChatStore = create<ChatState>((set, get) => ({
         // 提供更详细的错误信息
         let errorMessage = '连接失败'
         if (err.type && err.type.toString() === 'peer-unavailable') {
-          errorMessage = '无法连接到指定的群聊，可能群聊已不存在或暂时不可用'
+          errorMessage = `无法连接到指定的群聊，可能群聊已不存在或暂时不可用`
+          console.log(`无法连接到群聊ID: ${cleanedRoomId}`)
+
+          // 不再需要检查ID是否被截断，因为我们现在使用nanoid生成不带横线的ID
+          chatEvents.emit('error', errorMessage)
+          set({ isConnecting: false })
         } else {
           errorMessage = `连接错误: ${err.message || '无法连接到群聊'}`
+          chatEvents.emit('error', errorMessage)
+          set({ isConnecting: false })
         }
-
-        chatEvents.emit('error', errorMessage)
-        set({ isConnecting: false })
       })
 
       conn.on('close', () => {
@@ -462,19 +470,23 @@ const useChatStore = create<ChatState>((set, get) => ({
 
 // 清理 roomId
 function cleanRoomId(id: string): string {
-  // 移除可能导致连接问题的字符，如重复的 ID 部分 (hwW6wz-hwW6wz)
-  if (id.includes('-')) {
-    const parts = id.split('-')
-    // 如果破折号两边的部分相同，只返回一部分
+  // 移除空格
+  let cleanedId = id.trim()
+
+  // 如果是旧版本的带破折号的ID，尝试清理
+  if (cleanedId.includes('-')) {
+    // 检查是否是旧版本的PeerJS自动生成的ID
+    const parts = cleanedId.split('-')
     if (parts[0] === parts[1]) {
-      console.log(`检测到重复ID格式: ${id} -> ${parts[0]}`)
+      console.log(`检测到重复ID格式: ${cleanedId} -> ${parts[0]}`)
       return parts[0]
     }
-    // 如果是其他格式的破折号，可能是 PeerJS 内部使用的格式，尝试使用第一部分
-    console.log(`检测到带破折号的ID: ${id} -> ${parts[0]}`)
-    return parts[0]
+
+    // 对于其他带破折号的ID，保留完整ID
+    console.log(`检测到带破折号的ID，保留完整ID: ${cleanedId}`)
   }
-  return id
+
+  return cleanedId
 }
 
 // 设置 Peer 监听器
