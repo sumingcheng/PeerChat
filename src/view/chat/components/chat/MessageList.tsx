@@ -1,9 +1,9 @@
-import { useChat } from '@/context/ChatContext'
 import React, { useEffect, useRef } from 'react'
+import useChatStore from '@/store/useChatStore'
 import Message from './Message'
 
 const MessageList: React.FC = () => {
-  const { messages, userId } = useChat();
+  const messages = useChatStore(state => state.messages);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // 自动滚动到最新消息

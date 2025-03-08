@@ -1,11 +1,22 @@
-import { PropsWithChildren } from 'react'
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import ChatLayout from './view/chat/components/layout/ChatLayout';
+import ChatPanel from './view/chat/components/chat/ChatPanel';
 
-function App({ children }: PropsWithChildren) {
+const App: React.FC = () => {
   return (
-    <div className="min-h-full h-full bg-gray-50">
-      {children}
-    </div>
-  )
-}
+    <Router>
+      <Toaster position="top-right" />
+      <Routes>
+        <Route path="/" element={
+          <ChatLayout>
+            <ChatPanel />
+          </ChatLayout>
+        } />
+      </Routes>
+    </Router>
+  );
+};
 
-export default App
+export default App;

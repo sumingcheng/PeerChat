@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useChat } from '@/context/ChatContext';
+import useChatStore from '@/store/useChatStore';
 
 const ChatInput: React.FC = () => {
-  const { sendMessage } = useChat();
+  const sendMessage = useChatStore(state => state.sendMessage);
   const [message, setMessage] = useState('');
 
   const handleSendMessage = (e: React.FormEvent) => {

@@ -1,4 +1,5 @@
-import { chatEvents, useChat } from '@/context/ChatContext'
+import { chatEvents } from '@/store/useChatStore'
+import useChatStore from '@/store/useChatStore'
 import { Content, Description, Overlay, Portal, Root, Title } from '@radix-ui/react-dialog'
 import { Root as SeparatorRoot } from '@radix-ui/react-separator'
 import React, { useCallback, useEffect, useState } from 'react'
@@ -12,7 +13,12 @@ const overlayShow = 'animate-[overlay-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 const contentShow = 'animate-[content-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 
 const ChatPanel: React.FC = () => {
-  const { currentChat, createGroupChat, userName, setUserName, isConnecting } = useChat();
+  const currentChat = useChatStore(state => state.currentChat);
+  const createGroupChat = useChatStore(state => state.createGroupChat);
+  const userName = useChatStore(state => state.userName);
+  const setUserName = useChatStore(state => state.setUserName);
+  const isConnecting = useChatStore(state => state.isConnecting);
+  
   const [nameDialogOpen, setNameDialogOpen] = useState(false);
   const [tempUserName, setTempUserName] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);

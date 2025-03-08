@@ -1,4 +1,5 @@
-import { chatEvents, useChat } from '@/context/ChatContext'
+import { chatEvents } from '@/store/useChatStore'
+import useChatStore from '@/store/useChatStore'
 import { GroupChat } from '@/types/chat'
 import {
   Action as AlertDialogAction, Cancel as AlertDialogCancel,
@@ -19,7 +20,10 @@ const overlayShow = 'animate-[overlay-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 const contentShow = 'animate-[content-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 
 const GroupChatHeader: React.FC = () => {
-  const { currentChat, copyShareLink, leaveCurrentChat } = useChat();
+  const currentChat = useChatStore(state => state.currentChat);
+  const copyShareLink = useChatStore(state => state.copyShareLink);
+  const leaveCurrentChat = useChatStore(state => state.leaveCurrentChat);
+  
   const [dialogOpen, setDialogOpen] = useState(false);
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
   
@@ -81,7 +85,7 @@ const GroupChatHeader: React.FC = () => {
               <div className="flex mb-6">
                 <input 
                   type="text" 
-                  value={groupChat.shareLink} 
+                  value={groupChat.shareLink || ''} 
                   readOnly 
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none"
                 />

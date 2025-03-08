@@ -1,10 +1,11 @@
 import React from 'react';
-import { useChat } from '@/context/ChatContext';
+import useChatStore from '@/store/useChatStore';
 import { GroupChat } from '@/types/chat';
 import Avatar from '../common/Avatar';
 
 const GroupUserList: React.FC = () => {
-  const { currentChat, userId } = useChat();
+  const currentChat = useChatStore(state => state.currentChat);
+  const userId = useChatStore(state => state.userId);
   
   if (!currentChat || !currentChat.isGroup) return null;
   

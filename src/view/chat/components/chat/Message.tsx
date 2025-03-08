@@ -1,4 +1,4 @@
-import { useChat } from '@/context/ChatContext'
+import useChatStore from '@/store/useChatStore'
 import { Message as MessageType } from '@/types/chat'
 import React from 'react'
 import Avatar from '../common/Avatar'
@@ -8,7 +8,7 @@ interface MessageProps {
 }
 
 const Message: React.FC<MessageProps> = ({ message }) => {
-  const { userId } = useChat();
+  const userId = useChatStore(state => state.userId);
   const isOwn = message.sender === userId;
   
   // 系统消息特殊处理

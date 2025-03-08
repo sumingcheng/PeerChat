@@ -1,4 +1,4 @@
-import { useChat } from '@/context/ChatContext'
+import useChatStore from '@/store/useChatStore'
 import { GroupChat } from '@/types/chat'
 import { Content, Description, Overlay, Portal, Root, Title } from '@radix-ui/react-dialog'
 import React, { useEffect, useState } from 'react'
@@ -8,7 +8,15 @@ const overlayShow = 'animate-[overlay-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 const contentShow = 'animate-[content-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 
 const Sidebar: React.FC = () => {
-  const { chats, currentChat, setCurrentChat, createGroupChat, userName, setUserName, joinGroupChat, isConnecting } = useChat();
+  const chats = useChatStore(state => state.chats);
+  const currentChat = useChatStore(state => state.currentChat);
+  const setCurrentChat = useChatStore(state => state.setCurrentChat);
+  const createGroupChat = useChatStore(state => state.createGroupChat);
+  const userName = useChatStore(state => state.userName);
+  const setUserName = useChatStore(state => state.setUserName);
+  const joinGroupChat = useChatStore(state => state.joinGroupChat);
+  const isConnecting = useChatStore(state => state.isConnecting);
+  
   const [nameDialogOpen, setNameDialogOpen] = useState(false);
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
   const [tempUserName, setTempUserName] = useState('');
