@@ -10,7 +10,8 @@
     "lint:fix": "eslint . --ext ts,tsx --fix",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "generate-lockfile": "npm i --package-lock-only"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.0.5",
