@@ -1,7 +1,7 @@
 import { useChat } from '@/context/ChatContext'
 import { GroupChat } from '@/types/chat'
 import { Content, Description, Overlay, Portal, Root, Title } from '@radix-ui/react-dialog'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 
 const overlayShow = 'animate-[overlay-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
@@ -15,6 +15,13 @@ const Sidebar: React.FC = () => {
   const [roomIdToJoin, setRoomIdToJoin] = useState('');
   const [urlInputDialogOpen, setUrlInputDialogOpen] = useState(false);
   const [urlInput, setUrlInput] = useState('');
+  
+  // 当有roomIdToJoin但没有userName时，打开用户名设置对话框
+  useEffect(() => {
+    if (roomIdToJoin && !userName) {
+      setNameDialogOpen(true);
+    }
+  }, [roomIdToJoin, userName]);
   
   const handleCreateGroupChat = () => {
     if (!userName) {
@@ -33,8 +40,6 @@ const Sidebar: React.FC = () => {
       if (roomIdToJoin) {
         joinGroupChat?.(roomIdToJoin);
         setRoomIdToJoin('');
-      } else {
-        createGroupChat?.();
       }
     } else {
       showToast('请输入有效的用户名');
@@ -94,12 +99,32 @@ const Sidebar: React.FC = () => {
   
   return (
     <div className="h-full flex flex-col">
-      <div className="p-4 border-b">
+      <div className="p-4 border-b flex items-center justify-between">
         <input
           type="text"
           placeholder="搜索聊天..."
           className="w-full px-4 py-2 rounded-lg bg-gray-100 focus:outline-none"
         />
+        {userName && (
+          <div className="ml-2 text-sm text-gray-500 flex items-center">
+            <span className="mr-1">用户:</span>
+            <span className="font-medium text-blue-500">{userName}</span>
+            <button 
+              onClick={() => {
+                setTempUserName(userName);
+                setNameDialogOpen(true);
+              }}
+              className="ml-1 p-1 text-gray-400 hover:text-gray-600"
+              title="修改用户名"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" 
+                />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
       
       <div className="flex-1 overflow-y-auto">
@@ -205,10 +230,26 @@ const Sidebar: React.FC = () => {
             className={`fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] 
               w-[90vw] max-w-[450px] rounded-lg bg-white p-6 shadow-xl focus:outline-none
               ${contentShow}`}
+            onEscapeKeyDown={(e) => {
+              // 如果是首次设置用户名（没有用户名），阻止关闭
+              if (!userName) {
+                e.preventDefault();
+              }
+            }}
+            onPointerDownOutside={(e) => {
+              // 如果是首次设置用户名（没有用户名），阻止关闭
+              if (!userName) {
+                e.preventDefault();
+              }
+            }}
           >
-            <Title className="text-xl font-semibold mb-4">设置您的用户名</Title>
+            <Title className="text-xl font-semibold mb-4">
+              {userName ? '修改用户名' : '设置您的用户名'}
+            </Title>
             <Description className="text-gray-500 mb-4">
-              在创建或加入群聊前，请先设置您的用户名：
+              {userName 
+                ? '请输入您的新用户名：' 
+                : '在创建或加入群聊前，请先设置您的用户名：'}
             </Description>
             <input
               type="text"
@@ -216,14 +257,17 @@ const Sidebar: React.FC = () => {
               onChange={(e) => setTempUserName(e.target.value)}
               placeholder="请输入您的用户名"
               className="w-full px-3 py-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              autoFocus
             />
             <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => setNameDialogOpen(false)}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
-              >
-                取消
-              </button>
+              {userName && (
+                <button
+                  onClick={() => setNameDialogOpen(false)}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+                >
+                  取消
+                </button>
+              )}
               <button
                 onClick={handleSetUserName}
                 className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
@@ -254,6 +298,7 @@ const Sidebar: React.FC = () => {
               onChange={(e) => setRoomIdToJoin(e.target.value)}
               placeholder="群聊ID或邀请链接"
               className="w-full px-3 py-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              autoFocus
             />
             <div className="flex justify-between">
               <button
@@ -300,6 +345,7 @@ const Sidebar: React.FC = () => {
               onChange={(e) => setUrlInput(e.target.value)}
               placeholder="https://example.com/chat?roomId=123456"
               className="w-full px-3 py-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              autoFocus
             />
             <div className="flex justify-end space-x-2">
               <button
