@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from 'react';
-import { useChat } from '@/context/ChatContext';
-import Message from './Message';
+import { useChat } from '@/context/ChatContext'
+import React, { useEffect, useRef } from 'react'
+import Message from './Message'
 
 const MessageList: React.FC = () => {
   const { messages, userId } = useChat();

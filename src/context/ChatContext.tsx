@@ -1,9 +1,8 @@
-import { createContext, ReactNode, useContext, useState, useEffect } from 'react'
-import { Chat, ChatContextType, Message, GroupChat, User } from '../types/chat'
-import Peer from 'peerjs'
 import { nanoid } from 'nanoid'
-import { useNavigate, useLocation } from 'react-router-dom'
-import toast from 'react-hot-toast'
+import Peer from 'peerjs'
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { Chat, ChatContextType, GroupChat, Message, User } from '../types/chat'
 
 interface ChatProviderProps {
   children: ReactNode;
@@ -63,7 +62,7 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
     console.log('正在初始化 PeerJS...');
     
     // 创建新的 peer 连接，添加更多的 STUN/TURN 服务器以提高连接成功率
-    const newPeer = new Peer(undefined, {
+    const newPeer = new Peer(undefined as unknown as string, {
       debug: 3, // 增加调试级别
       config: {
         iceServers: [
@@ -186,7 +185,7 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
       sender: 'system',
       senderName: 'System',
       content: '群聊已创建，分享链接邀请好友加入吧！',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString() as unknown as number,
     };
     
     groupChat.messages.push(systemMessage);
@@ -296,7 +295,7 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
           sender: 'system',
           senderName: 'System',
           content: '您已加入群聊',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString() as unknown as number
         };
         
         setMessages(prev => [...prev, systemMessage]);
@@ -337,7 +336,7 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
           sender: 'system',
           senderName: 'System',
           content: '与群聊的连接已断开',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString() as unknown as number
         };
         
         setMessages(prev => [...prev, systemMessage]);
@@ -451,7 +450,7 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
             sender: 'system',
             senderName: 'System',
             content: `${newUser.name} 加入了群聊`,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString() as unknown as number
           };
           
           setMessages(prev => [...prev, systemMessage]);
@@ -489,7 +488,7 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
               sender: 'system',
               senderName: 'System',
               content: `${newUser.name} 加入了群聊`,
-              timestamp: new Date().toISOString()
+              timestamp: new Date().toISOString() as unknown as number
             };
             
             setMessages(prev => [...prev, systemMessage]);
@@ -559,7 +558,7 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
               id: nanoid(), // 使用 nanoid 替代 uuid
               sender: 'system',
               content: `${leftUser.name} 已离开群聊`,
-              timestamp: new Date().toISOString()
+              timestamp: new Date().toISOString() as unknown as number
             };
             
             setMessages(prev => [...prev, systemMessage]);
@@ -614,7 +613,7 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
             id: nanoid(), // 使用 nanoid 替代 uuid
             sender: 'system',
             content: `${leftUser.name} 已离开群聊`,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString() as unknown as number
           };
           
           setMessages(prev => [...prev, systemMessage]);
@@ -641,7 +640,7 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
       sender: userId,
       senderName: userName,
       content: content,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString() as unknown as number
     };
     
     // 添加到自己的消息列表

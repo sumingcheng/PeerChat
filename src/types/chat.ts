@@ -7,7 +7,7 @@ export interface Message {
   id: string
   sender: string
   content: string
-  timestamp: number
+  timestamp: string
   senderName?: string
 }
 
@@ -29,15 +29,18 @@ export interface Chat {
   isGroup?: boolean
   participants?: User[]
   lastMessage?: string
-  lastMessageTime?: number
+  lastMessageTime?: string
 }
 
 export interface GroupChat extends Chat {
   isGroup: true
   roomId: string
   isHost: boolean
-  shareLink: string
+  shareLink?: string
   users: User[]
+  connections?: any[]
+  messages?: Message[]
+  participants?: User[]
 }
 
 export interface ChatContextType {
@@ -80,4 +83,5 @@ export interface ChatListItemProps {
   chat: Chat
   isActive?: boolean
   onClick: () => void
+  unreadCount?: number
 } 

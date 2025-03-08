@@ -1,8 +1,8 @@
-import React from 'react';
-import { ChatListItemProps } from '@/types/chat';
-import { Root as SeparatorRoot } from '@radix-ui/react-separator';
-import Avatar from '../common/Avatar';
-import Badge from '../common/Badge';
+import { ChatListItemProps } from '@/types/chat'
+import { Root as SeparatorRoot } from '@radix-ui/react-separator'
+import React from 'react'
+import Avatar from '../common/Avatar'
+import Badge from '../common/Badge'
 
 const ChatListItem: React.FC<ChatListItemProps> = ({ chat, isActive, onClick, unreadCount }) => {
   return (
@@ -14,7 +14,7 @@ const ChatListItem: React.FC<ChatListItemProps> = ({ chat, isActive, onClick, un
       >
         <div className="relative">
           <Avatar alt={chat.name} size="md" />
-          {unreadCount > 0 && <Badge count={unreadCount} />}
+          {unreadCount && unreadCount > 0 && <Badge count={unreadCount} />}
         </div>
         <div className="ml-3 flex-1 min-w-0">
           <div className="flex items-center justify-between">
