@@ -1,6 +1,7 @@
 import { useChat } from '@/context/ChatContext'
 import { Message as MessageType } from '@/types/chat'
 import React from 'react'
+import Avatar from '../common/Avatar'
 
 interface MessageProps {
   message: MessageType;
@@ -21,14 +22,27 @@ const Message: React.FC<MessageProps> = ({ message }) => {
     );
   }
 
+  // 格式化时间
+  const formattedTime = new Date(message.timestamp).toLocaleTimeString([], { 
+    hour: '2-digit', 
+    minute: '2-digit' 
+  });
+
   return (
-    <div className={`flex ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
-      <div className={`w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-white ${isOwn ? 'ml-3' : 'mr-3'}`}>
-        {message.senderName ? message.senderName.charAt(0).toUpperCase() : '?'}
-      </div>
+    <div className={`flex ${isOwn ? 'flex-row-reverse' : 'flex-row'} mb-4`}>
+      <Avatar 
+        alt={message.senderName || '用户'} 
+        size="sm"
+        className={isOwn ? 'ml-3' : 'mr-3'}
+      />
       <div className={`max-w-[70%] flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
+        {!isOwn && message.senderName && (
+          <div className="text-xs font-medium mb-1 text-gray-500">
+            {message.senderName}
+          </div>
+        )}
         <div
-          className={`rounded-lg p-3 ${
+          className={`rounded-lg p-3 break-words ${
             isOwn
               ? 'bg-blue-500 text-white'
               : 'bg-gray-100 text-gray-900'
@@ -37,7 +51,7 @@ const Message: React.FC<MessageProps> = ({ message }) => {
           {message.content}
         </div>
         <div className="mt-1 text-xs text-gray-500 flex items-center">
-          <span>{new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          <span>{formattedTime}</span>
           {isOwn && (
             <span className="ml-2">
               已发送

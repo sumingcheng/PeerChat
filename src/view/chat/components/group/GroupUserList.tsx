@@ -1,6 +1,7 @@
 import React from 'react';
 import { useChat } from '@/context/ChatContext';
 import { GroupChat } from '@/types/chat';
+import Avatar from '../common/Avatar';
 
 const GroupUserList: React.FC = () => {
   const { currentChat, userId } = useChat();
@@ -18,9 +19,7 @@ const GroupUserList: React.FC = () => {
       <div className="space-y-3">
         {users.map(user => (
           <div key={user.id} className="flex items-center">
-            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm">
-              {user.name.charAt(0).toUpperCase()}
-            </div>
+            <Avatar alt={user.name} size="sm" />
             <span className="ml-2 text-sm">
               {user.name} {user.id === userId && '(我)'}
             </span>

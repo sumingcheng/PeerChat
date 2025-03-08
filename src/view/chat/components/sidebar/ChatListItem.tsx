@@ -1,8 +1,10 @@
 import React from 'react';
 import { ChatListItemProps } from '@/types/chat';
 import { Root as SeparatorRoot } from '@radix-ui/react-separator';
+import Avatar from '../common/Avatar';
+import Badge from '../common/Badge';
 
-const ChatListItem: React.FC<ChatListItemProps> = ({ chat, isActive, onClick }) => {
+const ChatListItem: React.FC<ChatListItemProps> = ({ chat, isActive, onClick, unreadCount }) => {
   return (
     <>
       <div
@@ -11,10 +13,8 @@ const ChatListItem: React.FC<ChatListItemProps> = ({ chat, isActive, onClick }) 
         onClick={onClick}
       >
         <div className="relative">
-          <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white">
-            {chat.name.charAt(0).toUpperCase()}
-          </div>
-          {/* 未读消息标记，如果需要可以添加 */}
+          <Avatar alt={chat.name} size="md" />
+          {unreadCount > 0 && <Badge count={unreadCount} />}
         </div>
         <div className="ml-3 flex-1 min-w-0">
           <div className="flex items-center justify-between">

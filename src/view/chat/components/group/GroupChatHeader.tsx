@@ -13,6 +13,7 @@ import {
 import { Content, Description, Overlay, Portal, Root, Title, Trigger } from '@radix-ui/react-dialog'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
+import Avatar from '../common/Avatar'
 
 const overlayShow = 'animate-[overlay-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 const contentShow = 'animate-[content-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
@@ -51,9 +52,7 @@ const GroupChatHeader: React.FC = () => {
   return (
     <div className="p-4 flex items-center justify-between border-b border-gray-200">
       <div className="flex items-center">
-        <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium">
-          {groupChat.name.charAt(0)}
-        </div>
+        <Avatar alt={groupChat.name} size="md" />
         <div className="ml-3">
           <h2 className="font-medium">{groupChat.name}</h2>
           <p className="text-xs text-gray-500">{groupChat.users.length} 位成员</p>
