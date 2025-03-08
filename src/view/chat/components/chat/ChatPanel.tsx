@@ -29,7 +29,25 @@ const ChatPanel: React.FC = () => {
   useEffect(() => {
     const handleError = (message: string) => {
       setErrorMessage(message);
-      toast.error(message);
+      
+      // 检查是否是连接错误
+      if (message.includes('Could not connect to peer')) {
+        // 提取对等节点ID
+        const peerId = message.match(/Could not connect to peer (\w+)/)?.[1];
+        
+        toast.error(
+          <div>
+            <div>连接失败: 无法连接到对等节点</div>
+            {peerId && <div className="text-xs mt-1">节点ID: {peerId}</div>}
+            <div className="text-xs mt-1">
+              可能原因: 网络问题、防火墙限制或节点不存在
+            </div>
+          </div>, 
+          { duration: 5000 }
+        );
+      } else {
+        toast.error(message);
+      }
       
       // 5秒后清除错误消息
       setTimeout(() => {
@@ -42,6 +60,7 @@ const ChatPanel: React.FC = () => {
     };
     
     const handleJoinedGroup = () => {
+      toast.dismiss('connecting'); // 清除连接中的提示
       toast.success('成功加入群聊');
     };
     
@@ -100,7 +119,15 @@ const ChatPanel: React.FC = () => {
                     d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
                   />
                 </svg>
-                <span>{errorMessage}</span>
+                <div>
+                  <span>{errorMessage}</span>
+                  {errorMessage.includes('Could not connect to peer') && (
+                    <div className="mt-1 text-xs">
+                      <p>可能原因: 网络问题、防火墙限制或节点不存在</p>
+                      <p>建议: 尝试刷新页面或使用不同的网络连接</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -227,7 +254,15 @@ const ChatPanel: React.FC = () => {
                 d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
               />
             </svg>
-            <span>{errorMessage}</span>
+            <div>
+              <span>{errorMessage}</span>
+              {errorMessage.includes('Could not connect to peer') && (
+                <div className="mt-1 text-xs">
+                  <p>可能原因: 网络问题、防火墙限制或节点不存在</p>
+                  <p>建议: 尝试刷新页面或使用不同的网络连接</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

@@ -25,15 +25,35 @@ const Sidebar: React.FC = () => {
   
   // 清理 roomId 的辅助函数
   const cleanRoomId = (id: string): string => {
-    // 移除可能导致连接问题的字符，如重复的 ID 部分 (hwW6wz-hwW6wz)
-    if (id.includes('-')) {
-      const parts = id.split('-');
-      // 如果破折号两边的部分相同，只返回一部分
-      if (parts[0] === parts[1]) {
-        return parts[0];
+    // 移除所有空格
+    let cleanedId = id.trim();
+    
+    // 如果是URL，尝试提取roomId参数
+    if (cleanedId.startsWith('http')) {
+      try {
+        const url = new URL(cleanedId);
+        const roomIdParam = url.searchParams.get('roomId');
+        if (roomIdParam) {
+          cleanedId = roomIdParam.trim();
+        }
+      } catch (error) {
+        // URL解析失败，继续使用原始输入
       }
     }
-    return id;
+    
+    // 移除可能导致连接问题的字符，如重复的 ID 部分 (hwW6wz-hwW6wz)
+    if (cleanedId.includes('-')) {
+      const parts = cleanedId.split('-');
+      // 如果破折号两边的部分相同，只返回一部分
+      if (parts[0] === parts[1]) {
+        cleanedId = parts[0];
+      }
+    }
+    
+    // 移除任何非字母数字字符（保留破折号和下划线）
+    cleanedId = cleanedId.replace(/[^\w\-]/g, '');
+    
+    return cleanedId;
   };
   
   const handleCreateGroupChat = () => {
@@ -67,28 +87,40 @@ const Sidebar: React.FC = () => {
     }
     
     if (roomIdToJoin.trim()) {
-      // 检查输入是否是URL
-      if (roomIdToJoin.startsWith('http')) {
-        try {
-          const url = new URL(roomIdToJoin);
-          const roomId = url.searchParams.get('roomId');
-          if (roomId) {
-            const cleanedId = cleanRoomId(roomId);
-            joinGroupChat?.(cleanedId);
-            setJoinDialogOpen(false);
-            setRoomIdToJoin('');
-          } else {
-            showToast('无效的邀请链接，未找到roomId参数');
-          }
-        } catch (error) {
-          showToast('无效的URL格式');
-        }
-      } else {
-        // 直接作为roomId使用，但先清理格式
+      try {
+        // 清理输入的roomId
         const cleanedId = cleanRoomId(roomIdToJoin);
+        
+        if (!cleanedId) {
+          showToast('无效的群聊ID或链接');
+          return;
+        }
+        
+        // 显示正在连接的提示
+        toast.loading('正在连接群聊...', { id: 'connecting' });
+        
+        // 调用加入群聊的函数
         joinGroupChat?.(cleanedId);
+        
+        // 关闭对话框并清空输入
         setJoinDialogOpen(false);
         setRoomIdToJoin('');
+        
+        // 3秒后如果没有成功事件，显示可能的连接问题
+        setTimeout(() => {
+          // 检查是否已经加入了该群聊
+          const joined = chats.some(chat => chat.id === cleanedId);
+          if (!joined) {
+            toast.dismiss('connecting');
+            toast('连接可能需要更长时间，请稍候...', {
+              icon: '⏳',
+              duration: 5000
+            });
+          }
+        }, 3000);
+      } catch (error) {
+        showToast('连接失败，请检查ID是否正确');
+        console.error('Join group error:', error);
       }
     } else {
       showToast('请输入有效的群聊ID或链接');
@@ -107,24 +139,41 @@ const Sidebar: React.FC = () => {
     }
     
     try {
-      const url = new URL(urlInput);
-      const roomId = url.searchParams.get('roomId');
+      // 直接使用cleanRoomId函数处理URL
+      const cleanedId = cleanRoomId(urlInput);
       
-      if (roomId) {
-        const cleanedId = cleanRoomId(roomId);
+      if (cleanedId) {
         setRoomIdToJoin(cleanedId); // 保存清理后的roomId
         setUrlInputDialogOpen(false);
         
         if (!userName) {
           setNameDialogOpen(true);
         } else {
+          // 显示正在连接的提示
+          toast.loading('正在连接群聊...', { id: 'connecting' });
+          
+          // 调用加入群聊的函数
           joinGroupChat?.(cleanedId);
+          
+          // 3秒后如果没有成功事件，显示可能的连接问题
+          setTimeout(() => {
+            // 检查是否已经加入了该群聊
+            const joined = chats.some(chat => chat.id === cleanedId);
+            if (!joined) {
+              toast.dismiss('connecting');
+              toast('连接可能需要更长时间，请稍候...', {
+                icon: '⏳',
+                duration: 5000
+              });
+            }
+          }, 3000);
         }
       } else {
         showToast('无效的邀请链接，未找到roomId参数');
       }
     } catch (error) {
-      showToast('无效的URL格式');
+      showToast('处理链接时出错');
+      console.error('Process URL error:', error);
     }
   };
   

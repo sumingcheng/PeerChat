@@ -21,6 +21,18 @@ const ChatPage = () => {
             padding: '16px',
             maxWidth: '500px'
           },
+          loading: {
+            iconTheme: {
+              primary: '#3B82F6',
+              secondary: '#FFFFFF',
+            },
+            style: {
+              background: '#EFF6FF',
+              color: '#1E40AF',
+              borderColor: '#93C5FD',
+            },
+            duration: 10000,
+          },
           success: {
             iconTheme: {
               primary: '#10B981',
@@ -32,6 +44,12 @@ const ChatPage = () => {
               primary: '#EF4444',
               secondary: '#FFFFFF',
             },
+            style: {
+              background: '#FEF2F2',
+              color: '#B91C1C',
+              borderLeft: '4px solid #EF4444',
+            },
+            duration: 5000,
           },
         }}
       />
