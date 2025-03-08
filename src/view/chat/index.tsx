@@ -1,11 +1,10 @@
-import { ChatProvider } from '@/context/ChatContext';
 import { Toaster } from 'react-hot-toast';
 import ChatLayout from './components/layout/ChatLayout';
 import ChatPanel from './components/chat/ChatPanel';
 
 const ChatPage = () => {
   return (
-    <ChatProvider>
+    <>
       <ChatLayout>
         <ChatPanel />
       </ChatLayout>
@@ -53,7 +52,7 @@ const ChatPage = () => {
           },
         }}
       />
-    </ChatProvider>
+    </>
   );
 };
 
