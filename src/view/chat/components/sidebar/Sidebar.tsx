@@ -43,9 +43,11 @@ const Sidebar: React.FC = () => {
         const url = new URL(cleanedId);
         const roomIdParam = url.searchParams.get('roomId');
         if (roomIdParam) {
+          console.log(`从URL中提取roomId: ${cleanedId} -> ${roomIdParam}`);
           cleanedId = roomIdParam.trim();
         }
       } catch (error) {
+        console.error('解析URL失败:', error);
         // URL解析失败，继续使用原始输入
       }
     }
@@ -55,6 +57,11 @@ const Sidebar: React.FC = () => {
       const parts = cleanedId.split('-');
       // 如果破折号两边的部分相同，只返回一部分
       if (parts[0] === parts[1]) {
+        console.log(`检测到重复ID格式: ${cleanedId} -> ${parts[0]}`);
+        cleanedId = parts[0];
+      } else {
+        // 如果是其他格式的破折号，可能是 PeerJS 内部使用的格式，尝试使用第一部分
+        console.log(`检测到带破折号的ID: ${cleanedId} -> ${parts[0]}`);
         cleanedId = parts[0];
       }
     }
