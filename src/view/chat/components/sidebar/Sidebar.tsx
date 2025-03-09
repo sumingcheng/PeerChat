@@ -2,6 +2,7 @@ import useChatStore, { chatEvents } from '@/store/useChatStore'
 import { Chat, GroupChat } from '@/types/chat'
 import { cleanRoomId } from '@/utils/roomUtils'
 import { Content, Description, Overlay, Portal, Root, Title } from '@radix-ui/react-dialog'
+import { Provider as TooltipProvider, Root as TooltipRoot, Trigger as TooltipTrigger, Content as TooltipContent } from '@radix-ui/react-tooltip'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import ChatListItem from './ChatListItem'
@@ -169,47 +170,78 @@ const Sidebar: React.FC = () => {
     <div className="h-full flex flex-col">
       <div className="p-4 border-b border-gray-200 flex items-center justify-between">
         <h1 className="text-xl font-semibold text-gray-800">聊天</h1>
-        <div className="flex space-x-2">
-          <button
-            onClick={() => setJoinDialogOpen(true)}
-            disabled={isConnecting}
-            className={`p-2 text-gray-500 hover:bg-gray-100 rounded-full
-              ${isConnecting ? 'opacity-50 cursor-not-allowed' : ''}`}
-            title="加入群聊"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" 
-              />
-            </svg>
-          </button>
-          <button
-            onClick={handleCreateGroupChat}
-            disabled={isConnecting}
-            className={`p-2 text-gray-500 hover:bg-gray-100 rounded-full
-              ${isConnecting ? 'opacity-50 cursor-not-allowed' : ''}`}
-            title="创建群聊"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                d="M12 4v16m8-8H4" 
-              />
-            </svg>
-          </button>
-          <button
-            onClick={() => setNameDialogOpen(true)}
-            disabled={isConnecting}
-            className={`p-2 text-gray-500 hover:bg-gray-100 rounded-full
-              ${isConnecting ? 'opacity-50 cursor-not-allowed' : ''}`}
-            title={userName ? "修改用户名" : "设置用户名"}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" 
-              />
-            </svg>
-          </button>
-        </div>
+        <TooltipProvider>
+          <div className="flex space-x-2">
+            <TooltipRoot>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={handleCreateGroupChat}
+                  disabled={isConnecting}
+                  className={`p-2 text-gray-500 hover:bg-gray-100 rounded-full
+                    ${isConnecting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                      d="M12 4v16m8-8H4" 
+                    />
+                  </svg>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent 
+                className="bg-gray-800 text-white px-3 py-1.5 rounded text-sm animate-fadeIn z-50"
+                sideOffset={5}
+              >
+                创建群聊
+              </TooltipContent>
+            </TooltipRoot>
+            
+            <TooltipRoot>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setNameDialogOpen(true)}
+                  disabled={isConnecting}
+                  className={`p-2 text-gray-500 hover:bg-gray-100 rounded-full
+                    ${isConnecting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" 
+                    />
+                  </svg>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent 
+                className="bg-gray-800 text-white px-3 py-1.5 rounded text-sm animate-fadeIn z-50"
+                sideOffset={5}
+              >
+                {userName ? "修改用户名" : "设置用户名"}
+              </TooltipContent>
+            </TooltipRoot>
+            
+            <TooltipRoot>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setJoinDialogOpen(true)}
+                  disabled={isConnecting}
+                  className={`p-2 text-gray-500 hover:bg-gray-100 rounded-full
+                    ${isConnecting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" 
+                    />
+                  </svg>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent 
+                className="bg-gray-800 text-white px-3 py-1.5 rounded text-sm animate-fadeIn z-50"
+                sideOffset={5}
+              >
+                加入群聊
+              </TooltipContent>
+            </TooltipRoot>
+          </div>
+        </TooltipProvider>
       </div>
       
       {/* 聊天列表 */}

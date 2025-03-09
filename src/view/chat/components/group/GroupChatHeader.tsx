@@ -1,5 +1,4 @@
-import { chatEvents } from '@/store/useChatStore'
-import useChatStore from '@/store/useChatStore'
+import useChatStore, { chatEvents } from '@/store/useChatStore'
 import { GroupChat } from '@/types/chat'
 import {
   Action as AlertDialogAction, Cancel as AlertDialogCancel,
@@ -11,7 +10,6 @@ import {
   Title as AlertDialogTitle,
   Trigger as AlertDialogTrigger
 } from '@radix-ui/react-alert-dialog'
-import { Content, Description, Overlay, Portal, Root, Title, Trigger } from '@radix-ui/react-dialog'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import Avatar from '../common/Avatar'
@@ -34,7 +32,6 @@ const GroupChatHeader: React.FC = () => {
     const handleLinkCopied = () => {
       setIsCopying(false);
       toast.success('邀请链接已复制');
-      setDialogOpen(false);
     };
     
     chatEvents.on('linkCopied', handleLinkCopied);
@@ -101,59 +98,25 @@ const GroupChatHeader: React.FC = () => {
       </div>
       
       <div className="flex items-center space-x-2">
-        <Root open={dialogOpen} onOpenChange={setDialogOpen}>
-          <Trigger asChild>
-            <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-full" disabled={isConnecting}>
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" 
-                />
-              </svg>
-            </button>
-          </Trigger>
-          <Portal>
-            <Overlay className={`fixed inset-0 bg-black/30 ${overlayShow}`} />
-            <Content className={`fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] 
-              w-[90vw] max-w-[450px] rounded-lg bg-white p-6 shadow-xl focus:outline-none ${contentShow}`}>
-              <Title className="text-xl font-semibold mb-4">分享群聊</Title>
-              <Description className="text-gray-500 mb-4">
-                复制下面的链接，邀请好友加入群聊：
-              </Description>
-              <div className="flex mb-6">
-                <input 
-                  type="text" 
-                  value={groupChat.shareLink || ''} 
-                  readOnly 
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none"
-                />
-                <button 
-                  onClick={handleCopyLink}
-                  disabled={isCopying}
-                  className={`px-4 py-2 bg-blue-500 text-white rounded-r-md hover:bg-blue-600 flex items-center justify-center min-w-[80px]
-                    ${isCopying ? 'opacity-75' : ''}`}
-                >
-                  {isCopying ? (
-                    <>
-                      <svg className="w-4 h-4 mr-1 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      复制中
-                    </>
-                  ) : '复制'}
-                </button>
-              </div>
-              <div className="flex justify-end">
-                <button 
-                  onClick={() => setDialogOpen(false)}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
-                >
-                  关闭
-                </button>
-              </div>
-            </Content>
-          </Portal>
-        </Root>
+        <button 
+          className="p-2 text-gray-500 hover:bg-gray-100 rounded-full" 
+          disabled={isConnecting || isCopying}
+          onClick={handleCopyLink}
+          title="复制邀请链接"
+        >
+          {isCopying ? (
+            <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          ) : (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" 
+              />
+            </svg>
+          )}
+        </button>
         
         <AlertDialogRoot open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
           <AlertDialogTrigger asChild>
