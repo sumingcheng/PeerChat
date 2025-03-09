@@ -59,7 +59,7 @@ const GroupChatHeader: React.FC = () => {
       // 如果3秒后还没收到linkCopied事件，显示可能的错误
       const timeoutId = setTimeout(() => {
         setIsCopying(false);
-        toast.error('复制链接失败，请手动复制');
+        console.log('复制链接失败，请手动复制');
       }, 3000);
       
       // 在组件卸载时清除定时器
