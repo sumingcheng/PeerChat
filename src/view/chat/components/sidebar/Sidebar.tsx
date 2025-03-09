@@ -170,6 +170,19 @@ const Sidebar: React.FC = () => {
     <div className="h-full flex flex-col">
       <div className="p-4 border-b border-gray-200 flex items-center justify-between">
         <h1 className="text-xl font-semibold text-gray-800">聊天</h1>
+        <a 
+          href="https://github.com/sumingcheng/PeerChat"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center hover:opacity-80"
+          title="GitHub 仓库"
+        >
+          <img 
+            src="https://img.shields.io/github/stars/sumingcheng/PeerChat?logo=github" 
+            alt="GitHub Stars" 
+            className="h-5"
+          />
+        </a>
         <TooltipProvider>
           <div className="flex space-x-2">
             <TooltipRoot>
