@@ -67,7 +67,6 @@ const GroupChatHeader: React.FC = () => {
     } catch (error) {
       console.error('复制链接失败:', error);
       setIsCopying(false);
-      toast.error('复制链接失败，请手动复制');
     }
   };
   
