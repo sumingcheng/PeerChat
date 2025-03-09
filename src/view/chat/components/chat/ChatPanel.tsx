@@ -27,6 +27,8 @@ const ChatPanel: React.FC = () => {
   const [nameDialogOpen, setNameDialogOpen] = useState(false);
   const [tempUserName, setTempUserName] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isLocalNetwork, setIsLocalNetwork] = useState<boolean | null>(null);
+  const [networkModeDialogOpen, setNetworkModeDialogOpen] = useState(false);
 
   // 首次加载时检查是否已设置用户名
   useEffect(() => {
@@ -85,7 +87,7 @@ const ChatPanel: React.FC = () => {
       }, 5000);
     };
     
-    const handleGroupCreated = () => {
+    const handleGroupCreated = (data?: { isLocalNetwork?: boolean }) => {
       toast.success('群聊创建成功');
     };
     
@@ -112,7 +114,7 @@ const ChatPanel: React.FC = () => {
       toast.loading(`正在连接到节点 ${peerId}...`, { id: 'connecting' });
     };
     
-    const handlePeerInitialized = (data: { id: string }) => {
+    const handlePeerInitialized = (data: { id: string, isLocalNetwork?: boolean }) => {
       toast.success(
         <div className="w-30">
           <div>连接成功！</div>
@@ -122,20 +124,29 @@ const ChatPanel: React.FC = () => {
       );
     };
     
+    const handleNetworkModeChanged = (data: { isLocalNetwork: boolean }) => {
+      const mode = data.isLocalNetwork ? '局域网' : '互联网';
+      toast.success(`已切换到${mode}模式`);
+    };
+    
+    // 使用新的 EventEmitter 类的方法
     chatEvents.on('error', handleError);
     chatEvents.on('groupCreated', handleGroupCreated);
     chatEvents.on('joinedGroup', handleJoinedGroup);
     chatEvents.on('leftGroup', handleLeftGroup);
     chatEvents.on('connecting', handleConnecting);
     chatEvents.on('peerInitialized', handlePeerInitialized);
+    chatEvents.on('networkModeChanged', handleNetworkModeChanged);
     
     return () => {
+      // 移除事件监听
       chatEvents.off('error', handleError);
       chatEvents.off('groupCreated', handleGroupCreated);
       chatEvents.off('joinedGroup', handleJoinedGroup);
       chatEvents.off('leftGroup', handleLeftGroup);
       chatEvents.off('connecting', handleConnecting);
       chatEvents.off('peerInitialized', handlePeerInitialized);
+      chatEvents.off('networkModeChanged', handleNetworkModeChanged);
     };
   }, []);
 
@@ -156,6 +167,20 @@ const ChatPanel: React.FC = () => {
       toast.error('请输入有效的用户名');
     }
   };
+  
+  const handleToggleNetworkMode = () => {
+    // 获取GroupChatService实例
+    const groupChatService = (window as any).groupChatService;
+    if (groupChatService && typeof groupChatService.toggleNetworkMode === 'function') {
+      const newMode = groupChatService.toggleNetworkMode();
+      setIsLocalNetwork(newMode);
+      setNetworkModeDialogOpen(false);
+    } else {
+      // 如果无法直接访问服务实例，可以通过事件系统发送切换请求
+      chatEvents.emit('requestToggleNetworkMode');
+      setNetworkModeDialogOpen(false);
+    }
+  };
 
   if (!currentChat) {
     return (
@@ -164,8 +189,21 @@ const ChatPanel: React.FC = () => {
           <h2 className="text-2xl font-semibold text-gray-700">开始一个新的对话</h2>
           <p className="text-gray-500">创建一个群聊，邀请好友加入实时对话</p>
           {userName && (
-            <p className="text-sm text-blue-500">当前用户: {userName}</p>
+            <p className="text-sm text-blue-500 font-bold">当前用户: {userName}</p>
           )}
+          
+          {/* 暂时隐藏网络模式切换功能 */}
+          {/* {isLocalNetwork !== null && (
+            <p className="text-xs text-gray-500">
+              当前网络模式: {isLocalNetwork ? '局域网' : '互联网'}
+              <button 
+                onClick={() => setNetworkModeDialogOpen(true)}
+                className="ml-2 text-blue-500 underline"
+              >
+                切换
+              </button>
+            </p>
+          )} */}
           
           {/* 显示错误消息 */}
           {errorMessage && (
@@ -293,6 +331,47 @@ const ChatPanel: React.FC = () => {
             </Content>
           </Portal>
         </Root>
+        
+        {/* 网络模式切换对话框 - 暂时保留但不显示 */}
+        <Root open={networkModeDialogOpen} onOpenChange={setNetworkModeDialogOpen}>
+          <Portal>
+            <Overlay className={`fixed inset-0 bg-black/30 ${overlayShow}`} />
+            <Content 
+              className={`fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] 
+                w-[90vw] max-w-[450px] rounded-lg bg-white p-6 shadow-xl focus:outline-none
+                ${contentShow}`}
+            >
+              <Title className="text-xl font-semibold mb-4">
+                切换网络模式
+              </Title>
+              <Description className="text-gray-500 mb-4">
+                当前模式: {isLocalNetwork ? '局域网' : '互联网'}
+              </Description>
+              <div className="mb-6">
+                <p className="text-sm text-gray-600 mb-2">
+                  <strong>局域网模式:</strong> 适用于同一网络下的设备通信，速度更快，但仅限于局域网内使用。
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>互联网模式:</strong> 适用于不同网络下的设备通信，可以跨网络使用，但速度可能较慢。
+                </p>
+              </div>
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={() => setNetworkModeDialogOpen(false)}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleToggleNetworkMode}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                >
+                  切换到{isLocalNetwork ? '互联网' : '局域网'}模式
+                </button>
+              </div>
+            </Content>
+          </Portal>
+        </Root>
       </div>
     );
   }
@@ -336,6 +415,19 @@ const ChatPanel: React.FC = () => {
           </div>
         </div>
       )}
+      
+      {/* 暂时隐藏网络模式显示 */}
+      {/* {(currentChat as GroupChat).isLocalNetwork !== undefined && (
+        <div className={`p-2 text-xs text-center ${(currentChat as GroupChat).isLocalNetwork ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'}`}>
+          当前使用{(currentChat as GroupChat).isLocalNetwork ? '局域网' : '互联网'}模式连接
+          <button 
+            onClick={() => setNetworkModeDialogOpen(true)}
+            className="ml-2 underline"
+          >
+            切换
+          </button>
+        </div>
+      )} */}
       
       {isGroupChat ? (
         // 群聊界面
@@ -419,6 +511,50 @@ const ChatPanel: React.FC = () => {
                 className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
               >
                 确定
+              </button>
+            </div>
+          </Content>
+        </Portal>
+      </Root>
+      
+      {/* 网络模式切换对话框 - 暂时保留但不显示 */}
+      <Root open={networkModeDialogOpen} onOpenChange={setNetworkModeDialogOpen}>
+        <Portal>
+          <Overlay className={`fixed inset-0 bg-black/30 ${overlayShow}`} />
+          <Content 
+            className={`fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] 
+              w-[90vw] max-w-[450px] rounded-lg bg-white p-6 shadow-xl focus:outline-none
+              ${contentShow}`}
+          >
+            <Title className="text-xl font-semibold mb-4">
+              切换网络模式
+            </Title>
+            <Description className="text-gray-500 mb-4">
+              当前模式: {isLocalNetwork ? '局域网' : '互联网'}
+            </Description>
+            <div className="mb-6">
+              <p className="text-sm text-gray-600 mb-2">
+                <strong>局域网模式:</strong> 适用于同一网络下的设备通信，速度更快，但仅限于局域网内使用。
+              </p>
+              <p className="text-sm text-gray-600">
+                <strong>互联网模式:</strong> 适用于不同网络下的设备通信，可以跨网络使用，但速度可能较慢。
+              </p>
+              <p className="text-sm text-red-500 mt-2">
+                <strong>注意:</strong> 切换网络模式会断开当前连接，需要重新加入群聊。
+              </p>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setNetworkModeDialogOpen(false)}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleToggleNetworkMode}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+              >
+                切换到{isLocalNetwork ? '互联网' : '局域网'}模式
               </button>
             </div>
           </Content>

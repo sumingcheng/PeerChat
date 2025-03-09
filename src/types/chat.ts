@@ -19,6 +19,8 @@ export interface User {
   id: string
   name: string
   avatar?: string
+  isLocalNetwork?: boolean
+  localIpAddress?: string
 }
 
 export interface LastMessage {
@@ -34,6 +36,7 @@ export interface Chat {
   participants?: User[]
   lastMessage?: string
   lastMessageTime?: string
+  unreadCount?: number
 }
 
 export interface GroupChat extends Chat {
@@ -45,6 +48,8 @@ export interface GroupChat extends Chat {
   connections?: any[]
   messages?: Message[]
   participants?: User[]
+  isLocalNetwork?: boolean
+  localIpAddress?: string
 }
 
 export interface ChatContextType {

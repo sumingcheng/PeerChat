@@ -1,8 +1,10 @@
-import useChatStore, { chatEvents, cleanRoomId } from '@/store/useChatStore'
-import { GroupChat } from '@/types/chat'
+import useChatStore, { chatEvents } from '@/store/useChatStore'
+import { Chat, GroupChat } from '@/types/chat'
+import { cleanRoomId } from '@/utils/roomUtils'
 import { Content, Description, Overlay, Portal, Root, Title } from '@radix-ui/react-dialog'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
+import ChatListItem from './ChatListItem'
 
 // 动画常量
 const overlayShow = 'animate-[overlay-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
@@ -13,24 +15,45 @@ const Sidebar: React.FC = () => {
   const currentChat = useChatStore(state => state.currentChat);
   const setCurrentChat = useChatStore(state => state.setCurrentChat);
   const createGroupChat = useChatStore(state => state.createGroupChat);
+  const joinGroupChat = useChatStore(state => state.joinGroupChat);
   const userName = useChatStore(state => state.userName);
   const setUserName = useChatStore(state => state.setUserName);
-  const joinGroupChat = useChatStore(state => state.joinGroupChat);
   const isConnecting = useChatStore(state => state.isConnecting);
   
   const [nameDialogOpen, setNameDialogOpen] = useState(false);
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
   const [tempUserName, setTempUserName] = useState('');
-  const [roomIdToJoin, setRoomIdToJoin] = useState('');
-  const [urlInputDialogOpen, setUrlInputDialogOpen] = useState(false);
-  const [urlInput, setUrlInput] = useState('');
+  const [roomIdInput, setRoomIdInput] = useState('');
+  const [isJoining, setIsJoining] = useState(false);
   
-  // 当有roomIdToJoin但没有userName时，打开用户名设置对话框
+  // 首次加载时检查是否已设置用户名
   useEffect(() => {
-    if (roomIdToJoin && !userName) {
-      setNameDialogOpen(true);
+    if (userName) {
+      setTempUserName(userName);
     }
-  }, [roomIdToJoin, userName]);
+  }, [userName]);
+  
+  // 监听事件
+  useEffect(() => {
+    const handleJoinedGroup = () => {
+      setJoinDialogOpen(false);
+      setRoomIdInput('');
+      setIsJoining(false);
+    };
+    
+    const handleError = () => {
+      setIsJoining(false);
+    };
+    
+    // 使用新的 EventEmitter 类的方法
+    chatEvents.on('joinedGroup', handleJoinedGroup);
+    chatEvents.on('error', handleError);
+    
+    return () => {
+      chatEvents.off('joinedGroup', handleJoinedGroup);
+      chatEvents.off('error', handleError);
+    };
+  }, []);
   
   const handleCreateGroupChat = () => {
     if (!userName) {
@@ -44,308 +67,194 @@ const Sidebar: React.FC = () => {
     if (tempUserName.trim()) {
       setUserName?.(tempUserName);
       setNameDialogOpen(false);
-      
-      // 如果有待加入的房间ID，则加入
-      if (roomIdToJoin) {
-        const cleanedId = cleanRoomId(roomIdToJoin);
-        joinGroupChat?.(cleanedId);
-        setRoomIdToJoin('');
-      }
     } else {
-      showToast('请输入有效的用户名');
+      toast.error('请输入有效的用户名');
     }
   };
   
+  const handleSelectChat = (chat: Chat) => {
+    if (isConnecting) return; // 连接中不允许切换聊天
+    setCurrentChat?.(chat);
+  };
+  
   const handleJoinGroupChat = () => {
+    if (!roomIdInput.trim()) {
+      toast.error('请输入有效的群聊ID或链接');
+      return;
+    }
+    
     if (!userName) {
       setNameDialogOpen(true);
       return;
     }
     
-    if (roomIdToJoin.trim()) {
-      try {
-        // 清理输入的roomId
-        const cleanedId = cleanRoomId(roomIdToJoin);
-        
-        if (!cleanedId) {
-          showToast('无效的群聊ID或链接');
-          return;
-        }
-        
-        // 显示正在连接的提示
-        toast.loading('正在连接群聊...', { 
-          id: 'connecting',
-          duration: 10000 // 设置较长的持续时间，避免自动消失
-        });
-        
-        // 调用加入群聊的函数
-        joinGroupChat?.(cleanedId);
-        
-        // 关闭对话框并清空输入
-        setJoinDialogOpen(false);
-        setRoomIdToJoin('');
-        
-        // 5秒后如果没有成功事件，显示可能的连接问题
-        setTimeout(() => {
-          // 检查是否已经加入了该群聊
-          const joined = chats.some(chat => chat.id === cleanedId);
-          if (!joined) {
-            toast.dismiss('connecting');
-            toast('连接可能需要更长时间，请稍候...', {
-              icon: '⏳',
-              duration: 5000
-            });
-          }
-        }, 5000);
-      } catch (error) {
-        showToast('连接失败，请检查ID是否正确');
-        console.error('Join group error:', error);
-      }
-    } else {
-      showToast('请输入有效的群聊ID或链接');
-    }
-  };
-  
-  // 从URL中提取roomId
-  const handleJoinFromUrl = () => {
-    setUrlInputDialogOpen(true);
-  };
-  
-  const processUrlInput = () => {
-    if (!urlInput) {
-      setUrlInputDialogOpen(false);
+    setIsJoining(true);
+    
+    // 显示正在连接的提示
+    toast.loading(`正在连接到群聊...`, { 
+      id: 'connecting',
+      duration: 20000 // 设置较长的持续时间，避免自动消失
+    });
+    
+    // 使用工具函数清理输入
+    const cleanedRoomId = cleanRoomId(roomIdInput);
+    
+    // 检查是否已经加入了该群聊
+    const existingChat = chats.find(chat => 
+      chat.isGroup && (chat as GroupChat).roomId === cleanedRoomId
+    );
+    
+    if (existingChat) {
+      toast.dismiss('connecting');
+      toast.success('已经加入过该群聊，直接切换');
+      setCurrentChat?.(existingChat);
+      setJoinDialogOpen(false);
+      setRoomIdInput('');
+      setIsJoining(false);
       return;
     }
     
+    // 加入群聊
+    joinGroupChat?.(cleanedRoomId);
+  };
+  
+  const handleJoinFromUrl = () => {
+    processUrlInput();
+  };
+  
+  const processUrlInput = () => {
     try {
-      // 直接使用cleanRoomId函数处理URL
-      const cleanedId = cleanRoomId(urlInput);
-      
-      if (cleanedId) {
-        setRoomIdToJoin(cleanedId); // 保存清理后的roomId
-        setUrlInputDialogOpen(false);
+      // 检查是否是URL
+      if (roomIdInput.startsWith('http')) {
+        const url = new URL(roomIdInput);
+        const roomIdParam = url.searchParams.get('roomId');
         
-        if (!userName) {
-          setNameDialogOpen(true);
+        if (roomIdParam) {
+          // 更新输入框显示提取出的roomId
+          setRoomIdInput(roomIdParam);
+          toast.success('已从链接中提取群聊ID');
         } else {
-          // 显示正在连接的提示
-          toast.loading('正在连接群聊...', { id: 'connecting' });
-          
-          // 调用加入群聊的函数
-          joinGroupChat?.(cleanedId);
-          
-          // 3秒后如果没有成功事件，显示可能的连接问题
-          setTimeout(() => {
-            // 检查是否已经加入了该群聊
-            const joined = chats.some(chat => chat.id === cleanedId);
-            if (!joined) {
-              toast.dismiss('connecting');
-              toast('连接可能需要更长时间，请稍候...', {
-                icon: '⏳',
-                duration: 5000
-              });
-            }
-          }, 3000);
+          toast.error('无法从链接中提取群聊ID');
         }
       } else {
-        showToast('无效的邀请链接，未找到roomId参数');
+        // 如果不是URL，尝试直接作为roomId处理
+        handleJoinGroupChat();
       }
     } catch (error) {
-      showToast('处理链接时出错');
-      console.error('Process URL error:', error);
+      console.error('处理URL时出错:', error);
+      toast.error('无效的链接格式');
     }
   };
   
+  // 处理回车键提交
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !isJoining) {
+      handleJoinGroupChat();
+    }
+  };
+  
+  // 显示提示信息
   const showToast = (message: string) => {
-    toast.error(message);
+    toast(message, {
+      icon: '🔔',
+      style: {
+        borderRadius: '10px',
+        background: '#333',
+        color: '#fff',
+      },
+    });
   };
   
   return (
     <div className="h-full flex flex-col">
-      <div className="p-4 border-b">
-        <div className="flex flex-col space-y-3">
-          <input
-            type="text"
-            placeholder="搜索聊天..."
-            className="w-full px-4 py-2 rounded-lg bg-gray-100 focus:outline-none"
+      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+        <h1 className="text-xl font-semibold text-gray-800">聊天</h1>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setJoinDialogOpen(true)}
             disabled={isConnecting}
-          />
-          
-          {userName && (
-            <div className="flex items-center justify-between bg-blue-50 px-3 py-2 rounded-lg">
-              <div className="flex items-center">
-                <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">
-                  {userName.charAt(0).toUpperCase()}
-                </div>
-                <span className="ml-2 font-medium text-blue-700 truncate max-w-[120px]">{userName}</span>
-              </div>
-              <button 
-                onClick={() => {
-                  setTempUserName(userName);
-                  setNameDialogOpen(true);
-                }}
-                className="p-1 text-blue-400 hover:text-blue-600 rounded-full hover:bg-blue-100"
-                title="修改用户名"
-                disabled={isConnecting}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" 
-                  />
-                </svg>
-              </button>
-            </div>
-          )}
+            className={`p-2 text-gray-500 hover:bg-gray-100 rounded-full
+              ${isConnecting ? 'opacity-50 cursor-not-allowed' : ''}`}
+            title="加入群聊"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" 
+              />
+            </svg>
+          </button>
+          <button
+            onClick={handleCreateGroupChat}
+            disabled={isConnecting}
+            className={`p-2 text-gray-500 hover:bg-gray-100 rounded-full
+              ${isConnecting ? 'opacity-50 cursor-not-allowed' : ''}`}
+            title="创建群聊"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                d="M12 4v16m8-8H4" 
+              />
+            </svg>
+          </button>
+          <button
+            onClick={() => setNameDialogOpen(true)}
+            disabled={isConnecting}
+            className={`p-2 text-gray-500 hover:bg-gray-100 rounded-full
+              ${isConnecting ? 'opacity-50 cursor-not-allowed' : ''}`}
+            title={userName ? "修改用户名" : "设置用户名"}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" 
+              />
+            </svg>
+          </button>
         </div>
       </div>
       
+      {/* 聊天列表 */}
       <div className="flex-1 overflow-y-auto">
-        <div className="p-4">
-          <h2 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2 flex items-center justify-between">
-            <span>最近聊天</span>
-            {isConnecting && (
-              <span className="text-blue-500 text-xs flex items-center">
-                <svg className="w-3 h-3 mr-1 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                连接中
-              </span>
-            )}
-          </h2>
-          
-          {chats.length === 0 ? (
-            <div className="text-center py-4 text-gray-400 text-sm">
+        {chats.length === 0 ? (
+          <div className="p-4 text-center text-gray-500">
+            <p>暂无聊天</p>
+            <p className="text-sm mt-1">创建或加入一个群聊开始对话</p>
+          </div>
+        ) : (
+          <div>
+            {chats.map(chat => (
+              <ChatListItem
+                key={chat.id}
+                chat={chat}
+                isActive={currentChat?.id === chat.id}
+                onClick={() => handleSelectChat(chat)}
+                isConnecting={isConnecting && currentChat?.id === chat.id}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+      
+      {/* 用户信息 */}
+      <div className="p-4 border-t border-gray-200">
+        <div className="flex items-center">
+          <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white">
+            {userName ? userName.charAt(0).toUpperCase() : '?'}
+          </div>
+          <div className="ml-3">
+            <p className="font-medium">{userName || '未设置用户名'}</p>
+            <p className="text-xs text-gray-500">
               {isConnecting ? (
-                <div className="flex flex-col items-center py-8">
-                  <svg className="w-8 h-8 mb-2 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24">
+                <span className="flex items-center">
+                  <svg className="w-3 h-3 mr-1 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  <p>正在连接中...</p>
-                </div>
-              ) : (
-                <p>暂无聊天记录</p>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-1">
-              {chats.map(chat => {
-                const isActive = currentChat?.id === chat.id;
-                const isGroup = chat.isGroup;
-                const chatIsConnecting = isConnecting && isActive;
-                
-                return (
-                  <div
-                    key={chat.id}
-                    onClick={() => setCurrentChat(chat)}
-                    className={`p-2 rounded-md cursor-pointer flex items-center ${
-                      isActive ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-100'
-                    }`}
-                  >
-                    <div className="w-10 h-10 rounded-full bg-gray-300 flex-shrink-0 flex items-center justify-center text-white relative">
-                      {isGroup ? (
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" 
-                          />
-                        </svg>
-                      ) : (
-                        chat.name.charAt(0).toUpperCase()
-                      )}
-                      
-                      {/* 连接中状态指示器 */}
-                      {chatIsConnecting && (
-                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white">
-                          <div className="absolute inset-0 bg-blue-500 rounded-full animate-ping opacity-75"></div>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="ml-3 flex-1 overflow-hidden">
-                      <div className="flex items-center justify-between">
-                        <p className="font-medium truncate">
-                          {chat.name}
-                          {chatIsConnecting && (
-                            <span className="ml-1 text-xs text-blue-500">(连接中...)</span>
-                          )}
-                        </p>
-                        {chat.lastMessageTime && (
-                          <span className="text-xs text-gray-500">
-                            {new Date(chat.lastMessageTime).toLocaleTimeString([], { 
-                              hour: '2-digit', 
-                              minute: '2-digit' 
-                            })}
-                          </span>
-                        )}
-                      </div>
-                      
-                      {chat.lastMessage && (
-                        <p className="text-sm text-gray-500 truncate">
-                          {chat.lastMessage}
-                        </p>
-                      )}
-                      
-                      {isGroup && (
-                        <div className="flex items-center mt-1">
-                          <span className="text-xs text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded-full">
-                            群聊 · {(chat as GroupChat).users.length}人
-                          </span>
-                          {/* 显示群聊ID，方便调试 */}
-                          <span className="ml-1 text-xs text-gray-400">
-                            ID: {chat.id.substring(0, 6)}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  连接中...
+                </span>
+              ) : '点击右上角图标修改用户名'}
+            </p>
+          </div>
         </div>
-      </div>
-      
-      <div className="p-4 flex space-x-2">
-        <button
-          onClick={handleCreateGroupChat}
-          disabled={isConnecting}
-          className={`flex-1 py-2 bg-blue-500 text-white rounded-md 
-            flex items-center justify-center
-            ${isConnecting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'}`}
-        >
-          {isConnecting ? (
-            <>
-              <svg className="w-4 h-4 mr-1 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              处理中...
-            </>
-          ) : (
-            <>
-              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              创建群聊
-            </>
-          )}
-        </button>
-        
-        <button
-          onClick={() => setJoinDialogOpen(true)}
-          disabled={isConnecting}
-          className={`flex-1 py-2 bg-gray-100 text-gray-700 rounded-md 
-            flex items-center justify-center
-            ${isConnecting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200'}`}
-        >
-          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-              d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" 
-            />
-          </svg>
-          加入群聊
-        </button>
       </div>
       
       {/* 用户名输入对话框 */}
@@ -375,7 +284,7 @@ const Sidebar: React.FC = () => {
             <Description className="text-gray-500 mb-4">
               {userName 
                 ? '请输入您的新用户名：' 
-                : '在创建或加入群聊前，请先设置您的用户名：'}
+                : '在开始使用前，请先设置您的用户名：'}
             </Description>
             <input
               type="text"
@@ -416,98 +325,56 @@ const Sidebar: React.FC = () => {
           >
             <Title className="text-xl font-semibold mb-4">加入群聊</Title>
             <Description className="text-gray-500 mb-4">
-              请输入群聊ID或粘贴邀请链接：
+              请输入群聊ID或邀请链接：
             </Description>
-            <input
-              type="text"
-              value={roomIdToJoin}
-              onChange={(e) => setRoomIdToJoin(e.target.value)}
-              placeholder="群聊ID或邀请链接"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              autoFocus
-            />
-            {/* 添加提示信息 */}
-            {roomIdToJoin.includes('-') && (
-              <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-700 text-xs">
-                <svg className="inline-block w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-                  />
-                </svg>
-                检测到ID包含破折号，这可能导致连接问题。系统将尝试自动修复。
-              </div>
-            )}
-            <div className="flex justify-between">
-              <button
-                onClick={handleJoinFromUrl}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
-              >
-                从链接加入
-              </button>
-              <div className="space-x-2">
+            <div className="mb-4">
+              <input
+                type="text"
+                value={roomIdInput}
+                onChange={(e) => setRoomIdInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="输入群聊ID或粘贴邀请链接"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                autoFocus
+                disabled={isJoining}
+              />
+              <div className="flex justify-between">
                 <button
-                  onClick={() => setJoinDialogOpen(false)}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+                  onClick={handleJoinFromUrl}
+                  disabled={isJoining || !roomIdInput.trim()}
+                  className={`text-sm text-blue-500 hover:text-blue-600
+                    ${(isJoining || !roomIdInput.trim()) ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  取消
+                  从链接提取ID
                 </button>
-                <button
-                  onClick={handleJoinGroupChat}
-                  disabled={isConnecting}
-                  className={`px-4 py-2 bg-blue-500 text-white rounded-md 
-                    ${isConnecting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'}`}
-                >
-                  {isConnecting ? (
-                    <span className="flex items-center">
-                      <svg className="w-4 h-4 mr-1 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      连接中...
-                    </span>
-                  ) : '加入'}
-                </button>
+                <div className="text-xs text-gray-500">
+                  例如: abc123 或 https://example.com?roomId=abc123
+                </div>
               </div>
             </div>
-          </Content>
-        </Portal>
-      </Root>
-      
-      {/* URL输入对话框 */}
-      <Root open={urlInputDialogOpen} onOpenChange={setUrlInputDialogOpen}>
-        <Portal>
-          <Overlay className={`fixed inset-0 bg-black/30 ${overlayShow}`} />
-          <Content 
-            className={`fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] 
-              w-[90vw] max-w-[450px] rounded-lg bg-white p-6 shadow-xl focus:outline-none
-              ${contentShow}`}
-          >
-            <Title className="text-xl font-semibold mb-4">输入邀请链接</Title>
-            <Description className="text-gray-500 mb-4">
-              请粘贴您收到的邀请链接：
-            </Description>
-            <input
-              type="text"
-              value={urlInput}
-              onChange={(e) => setUrlInput(e.target.value)}
-              placeholder="https://example.com/chat?roomId=123456"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              autoFocus
-            />
             <div className="flex justify-end space-x-2">
               <button
-                onClick={() => setUrlInputDialogOpen(false)}
+                onClick={() => setJoinDialogOpen(false)}
                 className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+                disabled={isJoining}
               >
                 取消
               </button>
               <button
-                onClick={processUrlInput}
-                disabled={isConnecting}
-                className={`px-4 py-2 bg-blue-500 text-white rounded-md 
-                  ${isConnecting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'}`}
+                onClick={handleJoinGroupChat}
+                disabled={isJoining || !roomIdInput.trim()}
+                className={`px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center
+                  ${(isJoining || !roomIdInput.trim()) ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                确定
+                {isJoining ? (
+                  <>
+                    <svg className="w-4 h-4 mr-1 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    加入中
+                  </>
+                ) : '加入'}
               </button>
             </div>
           </Content>

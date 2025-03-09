@@ -13,7 +13,8 @@ const ChatInput: React.FC = () => {
     if (message.trim() && sendMessage && !isConnecting) {
       setIsSending(true);
       try {
-        await sendMessage(message);
+        // 使用 MessageService 发送消息
+        sendMessage(message);
         setMessage('');
       } catch (error) {
         console.error('发送消息失败:', error);
