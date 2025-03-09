@@ -20,6 +20,9 @@ export class MessageService {
 
     // 获取roomId（如果是群聊）
     const roomId = currentChat.isGroup ? (currentChat as GroupChat).roomId : undefined
+    
+    // 检查是否是主持人
+    const isHost = currentChat.isGroup && (currentChat as GroupChat).isHost
 
     const newMessage: Message = {
       id: nanoid(),
@@ -28,8 +31,9 @@ export class MessageService {
       content: content,
       timestamp: new Date().toISOString(),
       status: 'sent',
-      roomId: roomId // 添加roomId信息
-    }
+      roomId: roomId, // 添加roomId信息
+      isHost: isHost // 添加isHost标记
+    } as Message
 
     // 添加到自己的消息列表
     this.set({ messages: [...messages, newMessage] })

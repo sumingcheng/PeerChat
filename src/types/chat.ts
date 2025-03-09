@@ -14,6 +14,7 @@ export interface Message {
   senderName?: string
   status?: MessageStatus
   roomId?: string
+  isHost?: boolean
 }
 
 export interface User {

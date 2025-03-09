@@ -12,11 +12,17 @@ const Message: React.FC<MessageProps> = ({ message }) => {
   const currentChat = useChatStore(state => state.currentChat);
   const isOwn = message.sender === userId;
   
-  // 检查发送者是否是主持人 - 改进判断逻辑
-  const isHost = currentChat && 
-                 currentChat.isGroup && 
-                 ((currentChat as GroupChat).roomId === message.sender || // 通过roomId判断
-                  (message.roomId && message.sender === message.roomId)); // 通过消息自身的roomId判断
+  // 检查发送者是否是主持人
+  const isHost = message.isHost || // 1. 直接使用消息中的isHost字段
+                 (currentChat && 
+                  currentChat.isGroup && 
+                  ((currentChat as GroupChat).roomId === message.sender || // 2. 通过roomId判断
+                   (message.roomId && message.sender === message.roomId))); // 3. 通过消息自身的roomId判断
+  
+  // 检查当前用户是否是主持人
+  const currentUserIsHost = currentChat && 
+                           currentChat.isGroup && 
+                           (currentChat as GroupChat).isHost;
   
   // 系统消息特殊处理
   if (message.sender === 'system') {
@@ -116,7 +122,9 @@ const Message: React.FC<MessageProps> = ({ message }) => {
                 : 'bg-blue-500 text-white'
               : isHost
                 ? 'bg-green-500 text-white' // 主持人消息使用绿色背景
-                : 'bg-gray-100 text-gray-900'
+                : currentUserIsHost
+                  ? 'bg-blue-500 text-white' // 主持人视角下，成员消息使用蓝色背景
+                  : 'bg-gray-100 text-gray-900' // 普通成员视角下，其他成员消息使用灰色背景
           }`}
         >
           {message.content}
