@@ -304,6 +304,19 @@ export class PeerService {
   handleMessageData(data: any, peerId: string) {
     const { currentChat } = this.get()
 
+    // 确保消息包含roomId
+    if (currentChat && currentChat.isGroup) {
+      const groupChat = currentChat as GroupChat;
+      if (!data.roomId) {
+        data.roomId = groupChat.roomId;
+      }
+      
+      // 如果发送者是主持人，确保标记为主持人
+      if (data.sender === groupChat.roomId) {
+        data.isHost = true;
+      }
+    }
+
     // 添加消息
     const newMessage: Message = {
       ...data,
@@ -313,7 +326,7 @@ export class PeerService {
     this.set((state: any) => ({ messages: [...state.messages, newMessage] }))
 
     // 更新当前聊天的最后消息
-    if (currentChat && currentChat.id === data.roomId) {
+    if (currentChat && (currentChat.id === data.roomId || !data.roomId)) {
       const updatedChat = {
         ...currentChat,
         lastMessage: newMessage.content,
@@ -328,6 +341,21 @@ export class PeerService {
           chat.id === currentChat.id ? updatedChat : chat
         )
       }))
+    }
+    
+    // 如果是主持人，将消息转发给其他所有成员
+    if (currentChat && currentChat.isGroup && (currentChat as GroupChat).isHost) {
+      const { connections } = this.get()
+      
+      // 转发给除了发送者之外的所有连接
+      Object.entries(connections).forEach(([connPeerId, conn]: [string, any]) => {
+        if (connPeerId !== peerId) {
+          conn.send({
+            type: 'MESSAGE',
+            data: newMessage
+          })
+        }
+      })
     }
   }
 

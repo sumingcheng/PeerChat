@@ -1,5 +1,5 @@
 import useChatStore from '@/store/useChatStore'
-import { Message as MessageType } from '@/types/chat'
+import { GroupChat, Message as MessageType } from '@/types/chat'
 import React from 'react'
 import Avatar from '../common/Avatar'
 
@@ -9,7 +9,14 @@ interface MessageProps {
 
 const Message: React.FC<MessageProps> = ({ message }) => {
   const userId = useChatStore(state => state.userId);
+  const currentChat = useChatStore(state => state.currentChat);
   const isOwn = message.sender === userId;
+  
+  // 检查发送者是否是主持人 - 改进判断逻辑
+  const isHost = currentChat && 
+                 currentChat.isGroup && 
+                 ((currentChat as GroupChat).roomId === message.sender || // 通过roomId判断
+                  (message.roomId && message.sender === message.roomId)); // 通过消息自身的roomId判断
   
   // 系统消息特殊处理
   if (message.sender === 'system') {
@@ -29,7 +36,7 @@ const Message: React.FC<MessageProps> = ({ message }) => {
   });
   
   // 获取消息状态（如果存在）
-  const messageStatus = message.status;
+  const messageStatus = message.status || (isOwn ? 'sent' : undefined);
   
   // 消息状态
   const getStatusIndicator = () => {
@@ -77,12 +84,15 @@ const Message: React.FC<MessageProps> = ({ message }) => {
         );
       default:
         return (
-          <span className="ml-2">
+          <span className="ml-2 text-gray-400">
             已发送
           </span>
         );
     }
   };
+
+  // 调试信息
+  console.log(`消息: ${message.content}, 发送者: ${message.sender}, roomId: ${message.roomId}, 是否主持人: ${isHost}`);
 
   return (
     <div className={`flex ${isOwn ? 'flex-row-reverse' : 'flex-row'} mb-4`}>
@@ -95,6 +105,7 @@ const Message: React.FC<MessageProps> = ({ message }) => {
         {!isOwn && message.senderName && (
           <div className="text-xs font-medium mb-1 text-gray-500">
             {message.senderName}
+            {isHost && <span className="ml-1 text-blue-500">（主持人）</span>}
           </div>
         )}
         <div
@@ -103,7 +114,9 @@ const Message: React.FC<MessageProps> = ({ message }) => {
               ? messageStatus === 'error' 
                 ? 'bg-red-100 text-red-800' 
                 : 'bg-blue-500 text-white'
-              : 'bg-gray-100 text-gray-900'
+              : isHost
+                ? 'bg-green-500 text-white' // 主持人消息使用绿色背景
+                : 'bg-gray-100 text-gray-900'
           }`}
         >
           {message.content}

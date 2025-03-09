@@ -13,6 +13,7 @@ export interface Message {
   timestamp: string
   senderName?: string
   status?: MessageStatus
+  roomId?: string
 }
 
 export interface User {

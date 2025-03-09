@@ -8,6 +8,7 @@ const MessageList: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
+  const [prevMessagesLength, setPrevMessagesLength] = useState(0);
   
   // 检测用户是否在查看历史消息
   useEffect(() => {
@@ -27,10 +28,19 @@ const MessageList: React.FC = () => {
   
   // 自动滚动到最新消息，但仅当用户在查看最新消息或消息列表为空时
   useEffect(() => {
-    if ((shouldScrollToBottom || messages.length <= 1) && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    // 如果消息数量增加了，说明有新消息
+    const hasNewMessages = messages.length > prevMessagesLength;
+    setPrevMessagesLength(messages.length);
+    
+    if ((shouldScrollToBottom && hasNewMessages) || messages.length <= 1) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, shouldScrollToBottom]);
+  }, [messages, shouldScrollToBottom, prevMessagesLength]);
+  
+  // 确保组件挂载时滚动到底部
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+  }, []);
   
   return (
     <div className="flex-1 p-4 overflow-y-auto" ref={containerRef}>

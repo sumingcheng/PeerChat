@@ -1,12 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import useChatStore from '@/store/useChatStore';
 import toast from 'react-hot-toast';
 
 const ChatInput: React.FC = () => {
   const sendMessage = useChatStore(state => state.sendMessage);
   const isConnecting = useChatStore(state => state.isConnecting);
+  const currentChat = useChatStore(state => state.currentChat);
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // 自动聚焦输入框
+  useEffect(() => {
+    if (inputRef.current && !isConnecting && !isSending) {
+      inputRef.current.focus();
+    }
+  }, [isConnecting, isSending]);
+
+  // 当聊天切换时也重新聚焦
+  useEffect(() => {
+    if (inputRef.current && currentChat) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+    }
+  }, [currentChat]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +39,23 @@ const ChatInput: React.FC = () => {
         toast.error('发送消息失败，请重试');
       } finally {
         setIsSending(false);
+        // 发送完成后重新聚焦输入框
+        setTimeout(() => {
+          if (inputRef.current) {
+            inputRef.current.focus();
+          }
+        }, 0);
+      }
+    }
+  };
+
+  // 处理键盘事件
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // 如果按下Enter键且没有按下Shift键，发送消息
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (message.trim() && !isConnecting && !isSending) {
+        handleSendMessage(e as unknown as React.FormEvent);
       }
     }
   };
@@ -32,12 +67,15 @@ const ChatInput: React.FC = () => {
     >
       <div className="flex items-center">
         <input
+          ref={inputRef}
           type="text"
           placeholder={isConnecting ? "正在连接中..." : "输入消息..."}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={handleKeyDown}
           className="flex-1 px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           disabled={isConnecting || isSending}
+          autoFocus
         />
         <button
           type="submit"

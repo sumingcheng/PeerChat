@@ -18,12 +18,17 @@ export class MessageService {
     const { currentChat, userId, userName, messages } = this.get()
     if (!content.trim() || !currentChat) return
 
+    // 获取roomId（如果是群聊）
+    const roomId = currentChat.isGroup ? (currentChat as GroupChat).roomId : undefined
+
     const newMessage: Message = {
       id: nanoid(),
       sender: userId,
       senderName: userName || undefined,
       content: content,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      status: 'sent',
+      roomId: roomId // 添加roomId信息
     }
 
     // 添加到自己的消息列表
@@ -48,12 +53,37 @@ export class MessageService {
     // 如果是群聊，广播消息给所有连接的用户
     if (currentChat.isGroup) {
       const groupChat = currentChat as GroupChat
-      groupChat.connections?.forEach(conn => {
-        conn.send({
-          type: 'MESSAGE',
-          data: newMessage
+      
+      if (groupChat.isHost) {
+        // 如果是主持人，发送给所有连接的成员
+        const { connections } = this.get()
+        Object.values(connections).forEach((conn: any) => {
+          try {
+            conn.send({
+              type: 'MESSAGE',
+              data: newMessage
+            })
+          } catch (error) {
+            console.error('发送消息失败:', error)
+            // 可以在这里更新消息状态为错误
+          }
         })
-      })
+      } else {
+        // 如果是成员，发送给主持人
+        if (groupChat.connections && groupChat.connections.length > 0) {
+          groupChat.connections.forEach((conn: any) => {
+            try {
+              conn.send({
+                type: 'MESSAGE',
+                data: newMessage
+              })
+            } catch (error) {
+              console.error('发送消息失败:', error)
+              // 可以在这里更新消息状态为错误
+            }
+          })
+        }
+      }
     }
   }
 
