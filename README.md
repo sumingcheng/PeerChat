@@ -1,77 +1,75 @@
 # PeerChat
 
+A real-time peer-to-peer chat application built with WebRTC technology. Enables direct communication between users without requiring a central server, featuring a clean interface and smooth chat experience.
 
+## Features
 
-PeerChat是一个基于WebRTC技术的实时点对点聊天应用，无需中心服务器即可实现用户之间的直接通信。提供了简洁直观的用户界面和流畅的聊天体验。
+### Decentralized Communication
 
-## 功能特点
+- Direct P2P communication via WebRTC
 
-### 去中心化通信
+- No central server for message storage, protecting user privacy
 
-- 基于WebRTC的P2P直接通信
+- NAT traversal support for various network environments
 
-- 无需中央服务器存储消息，保护用户隐私
+### Group Chat
 
-- 支持NAT穿透，适用于各种网络环境
+- Create and join group chats
 
-### 群聊功能
+- Host/member role distinction
 
-- 支持创建和加入群聊
+- Real-time online member display
 
-- 主持人/成员角色区分
+### User-Friendly Interface
 
-- 实时显示在线成员
+- Intuitive chat interface with message type differentiation
 
-### 用户友好界面
+- Special indicators for host messages
 
-- 直观的聊天界面，区分不同类型消息
+- Message status display (sending, sent, etc.)
 
-- 主持人消息特殊标识
+### Instant Sharing
 
-- 消息状态显示（发送中、已发送等）
+- Generate shareable group chat links
 
-### 即时分享
+- Quick join via links or IDs
 
-- 生成可分享的群聊链接
-
-- 通过链接或ID快速加入群聊
-
-## 技术栈
+## Tech Stack
 
 - React + TypeScript + Vite + PeerJS 
 
-## 本地开发
+## Local Development
 
 ```bash
-# 安装依赖
+# Install dependencies
 npm install
 
-# 启动开发服务器
+# Start development server
 npm run dev
 
-# 构建生产版本
+# Build for production
 npm run build
 
-# 预览生产构建
+# Preview production build
 npm run preview
 
-# 部署到 GitHub Pages
+# Deploy to GitHub Pages
 npm run deploy
 ```
 
-## 在线演示
+## Live Demo
 
-访问 [https://sumingcheng.github.io/PeerChat/](https://sumingcheng.github.io/PeerChat/) 查看在线演示。
+Visit [https://sumingcheng.github.io/PeerChat/](https://sumingcheng.github.io/PeerChat/) for live demo.
 ![image](https://github.com/user-attachments/assets/86215de5-b733-4210-853d-b19925e22539)
 ![image](https://github.com/user-attachments/assets/e3885b5a-19cc-4405-9c87-a8134fcc8398)
 ![image](https://github.com/user-attachments/assets/9148dc49-d901-40c3-b050-1807a74b024c)
 ![image](https://github.com/user-attachments/assets/fda512dc-450f-4554-bcb7-516f344f9813)
 
-## 许可证
+## License
 
 Apache License Version 2.0
 
-## 基本概念图示
+## Architecture Overview
 ![1](https://github.com/user-attachments/assets/29aac949-138b-4e2f-ae4c-a099fae9b8b6)
 
-## 捐赠
+## Donation
