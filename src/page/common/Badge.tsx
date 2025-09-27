@@ -1,6 +1,6 @@
 import React from 'react';
 import { Theme } from '@radix-ui/themes';
-import { BadgeProps } from '@/types/chat';
+import { BadgeProps } from '@/types/chat.ts';
 
 const Badge: React.FC<BadgeProps> = ({ count, className = '' }) => {
   if (!count) return null;

@@ -1,6 +1,6 @@
-import useChatStore from '@/store/useChatStore'
+import useChatStore from '@/store/useChatStore.ts'
 import React, { useEffect, useRef, useState } from 'react'
-import Message from './Message'
+import Message from './Message.tsx'
 
 const MessageList: React.FC = () => {
   const messages = useChatStore(state => state.messages);

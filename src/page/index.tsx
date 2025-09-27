@@ -1,10 +1,10 @@
-import useChatStore from '@/store/useChatStore'
-import { GroupChat } from '@/types/chat'
-import { cleanRoomId } from '@/utils/roomUtils'
+import useChatStore from '@/store/useChatStore.ts'
+import { GroupChat } from '@/types/chat.ts'
+import { cleanRoomId } from '@/utils/roomUtils.ts'
 import { useEffect } from 'react'
 import { Toaster } from 'react-hot-toast'
-import ChatPanel from './components/chat/ChatPanel'
-import ChatLayout from './components/layout/ChatLayout'
+import ChatPanel from '@/page/chat/ChatPanel.tsx'
+import ChatLayout from '@/page/layout/ChatLayout.tsx'
 
 const ChatPage = () => {
   const isConnecting = useChatStore(state => state.isConnecting);

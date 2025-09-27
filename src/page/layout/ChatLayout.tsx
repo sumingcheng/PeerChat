@@ -1,6 +1,6 @@
 import React from 'react';
-import Sidebar from '../sidebar/Sidebar';
-import useChatStore from '@/store/useChatStore';
+import Sidebar from '../sidebar/Sidebar.tsx';
+import useChatStore from '@/store/useChatStore.ts';
 
 interface ChatLayoutProps {
   children: React.ReactNode;

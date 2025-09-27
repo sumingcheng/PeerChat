@@ -1,5 +1,5 @@
 import React from 'react'
-import { AvatarProps } from '@/types/chat'
+import { AvatarProps } from '@/types/chat.ts'
 
 const Avatar: React.FC<AvatarProps> = ({ src, alt, size = 'md', className = '' }) => {
   const sizeClasses = {

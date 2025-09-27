@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import useChatStore from '@/store/useChatStore';
+import useChatStore from '@/store/useChatStore.ts';
 import toast from 'react-hot-toast';
 
 const ChatInput: React.FC = () => {

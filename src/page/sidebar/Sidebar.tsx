@@ -1,11 +1,11 @@
-import useChatStore, { chatEvents } from '@/store/useChatStore'
-import { Chat, GroupChat } from '@/types/chat'
-import { cleanRoomId } from '@/utils/roomUtils'
+import useChatStore, { chatEvents } from '@/store/useChatStore.ts'
+import { Chat, GroupChat } from '@/types/chat.ts'
+import { cleanRoomId } from '@/utils/roomUtils.ts'
 import { Content, Description, Overlay, Portal, Root, Title } from '@radix-ui/react-dialog'
 import { Provider as TooltipProvider, Root as TooltipRoot, Trigger as TooltipTrigger, Content as TooltipContent } from '@radix-ui/react-tooltip'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import ChatListItem from './ChatListItem'
+import ChatListItem from './ChatListItem.tsx'
 
 // 动画常量
 const overlayShow = 'animate-[overlay-show_150ms_cubic-bezier(0.16,1,0.3,1)]';

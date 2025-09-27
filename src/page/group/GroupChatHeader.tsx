@@ -1,5 +1,5 @@
-import useChatStore, { chatEvents } from '@/store/useChatStore'
-import { GroupChat } from '@/types/chat'
+import useChatStore, { chatEvents } from '@/store/useChatStore.ts'
+import { GroupChat } from '@/types/chat.ts'
 import {
   Action as AlertDialogAction, Cancel as AlertDialogCancel,
   Content as AlertDialogContent,
@@ -12,7 +12,7 @@ import {
 } from '@radix-ui/react-alert-dialog'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import Avatar from '../common/Avatar'
+import Avatar from '../common/Avatar.tsx'
 
 // 动画常量
 const overlayShow = 'animate-[overlay-show_150ms_cubic-bezier(0.16,1,0.3,1)]';

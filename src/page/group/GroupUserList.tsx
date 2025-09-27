@@ -1,7 +1,7 @@
 import React from 'react';
-import useChatStore from '@/store/useChatStore';
-import { GroupChat } from '@/types/chat';
-import Avatar from '../common/Avatar';
+import useChatStore from '@/store/useChatStore.ts';
+import { GroupChat } from '@/types/chat.ts';
+import Avatar from '../common/Avatar.tsx';
 
 const GroupUserList: React.FC = () => {
   const currentChat = useChatStore(state => state.currentChat);

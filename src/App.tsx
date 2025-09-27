@@ -1,7 +1,7 @@
 import React from 'react';
 import { Toaster } from 'react-hot-toast';
-import ChatLayout from './view/chat/components/layout/ChatLayout';
-import ChatPanel from './view/chat/components/chat/ChatPanel';
+import ChatLayout from '@/page/layout/ChatLayout';
+import ChatPanel from '@/page/chat/ChatPanel';
 
 const App: React.FC = () => {
   return (

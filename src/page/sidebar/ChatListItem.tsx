@@ -1,8 +1,8 @@
-import { ChatListItemProps } from '@/types/chat'
+import { ChatListItemProps } from '@/types/chat.ts'
 import { Root as SeparatorRoot } from '@radix-ui/react-separator'
 import React from 'react'
-import Avatar from '../common/Avatar'
-import Badge from '../common/Badge'
+import Avatar from '../common/Avatar.tsx'
+import Badge from '../common/Badge.tsx'
 
 const ChatListItem: React.FC<ChatListItemProps> = ({ 
   chat, 

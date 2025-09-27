@@ -1,14 +1,14 @@
-import { chatEvents } from '@/store/useChatStore'
-import useChatStore from '@/store/useChatStore'
+import { chatEvents } from '@/store/useChatStore.ts'
+import useChatStore from '@/store/useChatStore.ts'
 import { Content, Description, Overlay, Portal, Root, Title } from '@radix-ui/react-dialog'
 import { Root as SeparatorRoot } from '@radix-ui/react-separator'
 import React, { useCallback, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import GroupChatHeader from '../group/GroupChatHeader'
-import GroupUserList from '../group/GroupUserList'
-import ChatInput from '../input/ChatInput'
-import MessageList from './MessageList'
-import { GroupChat } from '@/types/chat'
+import GroupChatHeader from '../group/GroupChatHeader.tsx'
+import GroupUserList from '../group/GroupUserList.tsx'
+import ChatInput from '../input/ChatInput.tsx'
+import MessageList from './MessageList.tsx'
+import { GroupChat } from '@/types/chat.ts'
 
 // 动画常量
 const overlayShow = 'animate-[overlay-show_150ms_cubic-bezier(0.16,1,0.3,1)]';

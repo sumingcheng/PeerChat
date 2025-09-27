@@ -1,7 +1,7 @@
-import useChatStore from '@/store/useChatStore'
-import { GroupChat, Message as MessageType } from '@/types/chat'
+import useChatStore from '@/store/useChatStore.ts'
+import { GroupChat, Message as MessageType } from '@/types/chat.ts'
 import React from 'react'
-import Avatar from '../common/Avatar'
+import Avatar from '../common/Avatar.tsx'
 
 interface MessageProps {
   message: MessageType;

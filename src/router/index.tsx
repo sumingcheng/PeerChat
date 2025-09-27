@@ -1,5 +1,5 @@
 import App from '@/App'
-import ErrorPage from '@/view/error'
+import ErrorPage from '@/page/error'
 import { createHashRouter } from 'react-router-dom'
 
 
