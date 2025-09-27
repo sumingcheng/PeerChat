@@ -1,19 +1,16 @@
-import Peer from 'peerjs'
+import Peer, { DataConnection } from 'peerjs'
 import { nanoid } from 'nanoid'
 import { EventEmitter } from '@/utils/eventEmitter'
 import { Chat, GroupChat, Message, User } from '@/types/chat'
+import { ChatState, SetStateFunction, GetStateFunction, PeerMessage } from '@/types/store'
 import { cleanRoomId } from '@/utils/roomUtils'
-
-// 定义状态更新函数类型
-type SetFunction = (partial: Partial<any> | ((state: any) => Partial<any>)) => void
-type GetFunction = () => any
 
 export class PeerService {
   private isLocalNetwork: boolean = false;
 
   constructor(
-    private set: SetFunction,
-    private get: GetFunction,
+    private set: SetStateFunction<ChatState>,
+    private get: GetStateFunction<ChatState>,
     private chatEvents: EventEmitter
   ) {
     // 检测是否在局域网环境
@@ -233,7 +230,7 @@ export class PeerService {
         console.log(`与 ${peerId} 的连接已打开`)
 
         // 保存连接
-        this.set((state: any) => ({
+        this.set((state: ChatState) => ({
           connections: { ...state.connections, [peerId]: conn }
         }))
 
@@ -249,7 +246,7 @@ export class PeerService {
         console.log('连接已关闭:', peerId)
 
         // 从连接列表中移除
-        this.set((state: any) => {
+        this.set((state: ChatState) => {
           const newConnections = { ...state.connections }
           delete newConnections[peerId]
           return { connections: newConnections }
@@ -281,7 +278,7 @@ export class PeerService {
   }
 
   // 处理接收到的数据
-  handleReceivedData(data: any, peerId: string) {
+  handleReceivedData(data: PeerMessage, peerId: string) {
     // 使用策略模式处理不同类型的消息
     const handlers: Record<string, (data: any, peerId: string) => void> = {
       'MESSAGE': this.handleMessageData.bind(this),
@@ -323,7 +320,7 @@ export class PeerService {
       id: data.id || nanoid()
     }
 
-    this.set((state: any) => ({ messages: [...state.messages, newMessage] }))
+    this.set((state: ChatState) => ({ messages: [...state.messages, newMessage] }))
 
     // 更新当前聊天的最后消息
     if (currentChat && (currentChat.id === data.roomId || !data.roomId)) {
@@ -336,7 +333,7 @@ export class PeerService {
       this.set({ currentChat: updatedChat })
 
       // 更新聊天列表
-      this.set((state: any) => ({
+      this.set((state: ChatState) => ({
         chats: state.chats.map((chat: Chat) =>
           chat.id === currentChat.id ? updatedChat : chat
         )
@@ -348,7 +345,7 @@ export class PeerService {
       const { connections } = this.get()
       
       // 转发给除了发送者之外的所有连接
-      Object.entries(connections).forEach(([connPeerId, conn]: [string, any]) => {
+      Object.entries(connections).forEach(([connPeerId, conn]: [string, DataConnection]) => {
         if (connPeerId !== peerId) {
           conn.send({
             type: 'MESSAGE',

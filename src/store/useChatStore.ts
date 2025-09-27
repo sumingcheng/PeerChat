@@ -1,48 +1,15 @@
 import { GroupChatService } from '@/services/groupChatService'
 import { MessageService } from '@/services/messageService'
 import { PeerService } from '@/services/peerService'
-import { Chat, GroupChat, Message } from '@/types/chat'
+import { GroupChat } from '@/types/chat'
+import { ChatState } from '@/types/store'
 import { EventEmitter } from '@/utils/eventEmitter'
-import Peer from 'peerjs'
 import { create } from 'zustand'
 
 // 事件总线，用于跨组件通信
 export const chatEvents = new EventEmitter()
 
-// 定义聊天状态接口
-interface ChatState {
-  // 基础状态
-  currentChat: Chat | null
-  chats: Chat[]
-  messages: Message[]
-  loading: boolean
-  isConnecting: boolean
-
-  // 用户信息
-  userId: string
-  userName: string | null
-
-  // PeerJS 相关
-  peer: Peer | null
-  connections: Record<string, any>
-  isPeerInitialized: boolean
-  pendingRoomId: string | null
-  
-  // 网络模式
-  isLocalNetwork: boolean
-  localIpAddress: string | null
-
-  // 操作方法
-  setCurrentChat: (chat: Chat | null) => void
-  setUserName: (name: string) => void
-  createGroupChat: () => void
-  joinGroupChat: (roomId: string) => void
-  sendMessage: (content: string) => void
-  leaveCurrentChat: () => void
-  copyShareLink: () => void
-  setPendingRoomId: (roomId: string | null) => void
-  toggleNetworkMode: () => boolean
-}
+// ChatState 接口已在 @/types/store 中定义
 
 // 创建 Zustand store
 const useChatStore = create<ChatState>((set, get) => {

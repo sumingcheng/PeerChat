@@ -1,16 +1,13 @@
 import { nanoid } from 'nanoid'
 import { EventEmitter } from '@/utils/eventEmitter'
 import { Chat, GroupChat, Message } from '@/types/chat'
-
-// 定义状态更新函数类型
-type SetFunction = (partial: Partial<any> | ((state: any) => Partial<any>)) => void
-type GetFunction = () => any
+import { ChatState, SetStateFunction, GetStateFunction } from '@/types/store'
 
 export class MessageService {
   constructor(
-    private set: SetFunction,
-    private get: GetFunction,
-    private chatEvents: EventEmitter
+    private set: SetStateFunction<ChatState>,
+    private get: GetStateFunction<ChatState>,
+    private readonly chatEvents: EventEmitter
   ) { }
 
   // 发送消息
@@ -48,7 +45,7 @@ export class MessageService {
     this.set({ currentChat: updatedChat })
 
     // 更新聊天列表
-    this.set((state: any) => ({
+    this.set((state: ChatState) => ({
       chats: state.chats.map((chat: Chat) =>
         chat.id === currentChat.id ? updatedChat : chat
       )
@@ -61,7 +58,7 @@ export class MessageService {
       if (groupChat.isHost) {
         // 如果是主持人，发送给所有连接的成员
         const { connections } = this.get()
-        Object.values(connections).forEach((conn: any) => {
+        Object.values(connections).forEach((conn) => {
           try {
             conn.send({
               type: 'MESSAGE',
@@ -75,7 +72,7 @@ export class MessageService {
       } else {
         // 如果是成员，发送给主持人
         if (groupChat.connections && groupChat.connections.length > 0) {
-          groupChat.connections.forEach((conn: any) => {
+          groupChat.connections.forEach((conn) => {
             try {
               conn.send({
                 type: 'MESSAGE',
@@ -101,7 +98,7 @@ export class MessageService {
       timestamp: new Date().toISOString()
     }
 
-    this.set((state: any) => ({
+    this.set((state: ChatState) => ({
       messages: [...state.messages, systemMessage]
     }))
 

@@ -1,17 +1,14 @@
 import { Chat, GroupChat } from '@/types/chat'
 import { EventEmitter } from '@/utils/eventEmitter'
 import { cleanRoomId } from '@/utils/roomUtils'
+import { ChatState, SetStateFunction, GetStateFunction } from '@/types/store'
 import { MessageService } from './messageService'
 import { PeerService } from './peerService'
 
-// 定义状态更新函数类型
-type SetFunction = (partial: Partial<any> | ((state: any) => Partial<any>)) => void
-type GetFunction = () => any
-
 export class GroupChatService {
   constructor(
-    private set: SetFunction,
-    private get: GetFunction,
+    private set: SetStateFunction<ChatState>,
+    private get: GetStateFunction<ChatState>,
     private chatEvents: EventEmitter,
     private peerService: PeerService,
     private messageService: MessageService
@@ -46,11 +43,11 @@ export class GroupChatService {
       shareLink: `${window.location.origin}${window.location.pathname}?roomId=${groupId}`,
       // 添加局域网相关信息
       isLocalNetwork: isLocalNetwork,
-      localIpAddress: localIpAddress
+      localIpAddress: localIpAddress || undefined
     }
 
     // 添加系统消息
-    let systemMessage = this.messageService.addSystemMessage(`群聊已创建，分享链接邀请好友加入吧！\n群聊ID: ${groupId}\n\n请确保在群聊保持活跃状态，否则连接可能会过期。`)
+    const systemMessage = this.messageService.addSystemMessage(`群聊已创建，分享链接邀请好友加入吧！\n群聊ID: ${groupId}\n\n请确保在群聊保持活跃状态，否则连接可能会过期。`)
 
     if (groupChat.messages) {
       groupChat.messages.push(systemMessage)
@@ -82,7 +79,7 @@ export class GroupChatService {
       }
 
       // 如果是群主，向所有连接发送心跳
-      if (currentChat.isHost) {
+      if (currentChat.isGroup && (currentChat as GroupChat).isHost) {
         const { connections } = this.get()
         if (Object.keys(connections).length > 0) {
           console.log(`发送心跳到 ${Object.keys(connections).length} 个连接`)
@@ -159,7 +156,7 @@ export class GroupChatService {
         serialization: 'json',
         metadata: {
           isLocalNetwork,
-          localIpAddress: connectionInfo.localIpAddress,
+          localIpAddress: connectionInfo.localIpAddress || undefined,
           userName: userName,
           peerId: peer.id,
           timestamp: new Date().toISOString() // 添加时间戳
@@ -216,7 +213,7 @@ export class GroupChatService {
           isHost: false,
           shareLink: `${window.location.origin}${window.location.pathname}?roomId=${cleanedRoomId}`,
           isLocalNetwork: isLocalNetwork,
-          localIpAddress: connectionInfo.localIpAddress
+          localIpAddress: connectionInfo.localIpAddress || undefined
         }
 
         console.log('创建新的群聊对象:', newGroupChat)
@@ -243,7 +240,7 @@ export class GroupChatService {
             id: peer.id,
             name: userName,
             isLocalNetwork: isLocalNetwork,
-            localIpAddress: connectionInfo.localIpAddress
+            localIpAddress: connectionInfo.localIpAddress || undefined
           }
         })
 
@@ -444,6 +441,11 @@ export class GroupChatService {
     const connectionInfo = this.peerService.getConnectionInfo()
     const { peer } = this.get()
 
+    if (!peer) {
+      console.error('Peer 不存在，无法处理连接')
+      return
+    }
+
     // 创建新的群聊对象
     const newGroupChat: GroupChat = {
       id: roomId,
@@ -459,7 +461,7 @@ export class GroupChatService {
       isHost: false,
       shareLink: `${window.location.origin}${window.location.pathname}?roomId=${roomId}`,
       isLocalNetwork: isLocalNetwork,
-      localIpAddress: connectionInfo.localIpAddress
+      localIpAddress: connectionInfo.localIpAddress || undefined
     }
 
     console.log('创建新的群聊对象:', newGroupChat)
@@ -486,7 +488,7 @@ export class GroupChatService {
         id: peer.id,
         name: userName,
         isLocalNetwork: isLocalNetwork,
-        localIpAddress: connectionInfo.localIpAddress
+        localIpAddress: connectionInfo.localIpAddress || undefined
       }
     })
 
