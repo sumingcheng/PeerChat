@@ -6,6 +6,8 @@ import { MessageService } from './messageService'
 import { PeerService } from './peerService'
 
 export class GroupChatService {
+  private keepAliveInterval: number | null = null
+
   constructor(
     private set: SetStateFunction<ChatState>,
     private get: GetStateFunction<ChatState>,
@@ -98,7 +100,7 @@ export class GroupChatService {
     }, 60000) // 每分钟一次
 
       // 保存定时器ID，以便在离开群聊时清除
-      ; (window as any).keepAliveInterval = keepAliveInterval
+    this.keepAliveInterval = keepAliveInterval
   }
 
   // 加入群聊
@@ -293,9 +295,9 @@ export class GroupChatService {
     })
 
     // 清除保持活跃的定时器
-    if ((window as any).keepAliveInterval) {
-      clearInterval((window as any).keepAliveInterval)
-        ; (window as any).keepAliveInterval = null
+    if (this.keepAliveInterval) {
+      clearInterval(this.keepAliveInterval)
+      this.keepAliveInterval = null
     }
 
     // 断开所有连接

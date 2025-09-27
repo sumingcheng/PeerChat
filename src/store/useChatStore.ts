@@ -18,12 +18,7 @@ const useChatStore = create<ChatState>((set, get) => {
   const messageService = new MessageService(set, get, chatEvents)
   const groupChatService = new GroupChatService(set, get, chatEvents, peerService, messageService)
   
-  // 将服务实例暴露给全局，方便在组件中直接调用
-  if (typeof window !== 'undefined') {
-    (window as any).peerService = peerService;
-    (window as any).messageService = messageService;
-    (window as any).groupChatService = groupChatService;
-  }
+  // 服务实例通过事件系统和状态管理进行通信，不暴露到全局
   
   // 监听网络模式切换请求
   chatEvents.on('requestToggleNetworkMode', () => {

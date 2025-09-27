@@ -169,17 +169,9 @@ const ChatPanel: React.FC = () => {
   };
   
   const handleToggleNetworkMode = () => {
-    // 获取GroupChatService实例
-    const groupChatService = (window as any).groupChatService;
-    if (groupChatService && typeof groupChatService.toggleNetworkMode === 'function') {
-      const newMode = groupChatService.toggleNetworkMode();
-      setIsLocalNetwork(newMode);
-      setNetworkModeDialogOpen(false);
-    } else {
-      // 如果无法直接访问服务实例，可以通过事件系统发送切换请求
-      chatEvents.emit('requestToggleNetworkMode');
-      setNetworkModeDialogOpen(false);
-    }
+    // 使用事件系统发送切换请求 - 正确的架构模式
+    chatEvents.emit('requestToggleNetworkMode');
+    setNetworkModeDialogOpen(false);
   };
 
   if (!currentChat) {
