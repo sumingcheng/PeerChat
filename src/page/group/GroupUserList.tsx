@@ -46,12 +46,16 @@ const GroupUserList: React.FC = () => {
         <div className="space-y-3">
           {users.map(user => (
             <div key={user.id} className="flex items-center">
-              <Avatar alt={user.name} size="sm" />
+              <Avatar 
+                alt={user.name} 
+                size="sm" 
+                isHost={user.id === groupChat.roomId}
+              />
               <span className="ml-2 text-sm">
                 {user.name} {user.id === userId && '(我)'}
               </span>
               {groupChat.isHost && user.id === groupChat.roomId && (
-                <span className="ml-1 text-xs text-blue-500">(主持人)</span>
+                <span className="ml-1 text-xs text-green-600">(主持人)</span>
               )}
             </div>
           ))}

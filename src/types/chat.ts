@@ -83,6 +83,7 @@ export interface AvatarProps {
   alt: string
   size?: AvatarSize
   className?: string
+  isHost?: boolean
 }
 
 export interface BadgeProps {

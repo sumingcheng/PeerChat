@@ -78,7 +78,7 @@ const GroupChatHeader: React.FC = () => {
   return (
     <div className="p-4 flex items-center justify-between border-b border-gray-200">
       <div className="flex items-center">
-        <Avatar alt={groupChat.name} size="md" />
+        <Avatar alt={groupChat.name} size="md" isHost={groupChat.isHost} />
         <div className="ml-3">
           <h2 className="font-medium">{groupChat.name}</h2>
           <p className="text-xs text-gray-500">
