@@ -47,7 +47,6 @@ export interface GroupChat extends Chat {
   isHost: boolean;
   shareLink?: string;
   users: User[];
-  connections?: import('peerjs').DataConnection[];
   messages?: Message[];
   participants?: User[];
   isLocalNetwork?: boolean;

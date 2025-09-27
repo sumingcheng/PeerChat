@@ -2,6 +2,7 @@ import { Chat, GroupChat } from '@/types/chat';
 import { EventEmitter } from '@/utils/eventEmitter';
 import { cleanRoomId } from '@/utils/roomUtils';
 import { ChatState, SetStateFunction, GetStateFunction } from '@/types/store';
+import { ConnectionManager } from './connectionManager';
 import { MessageService } from './messageService';
 import { PeerService } from './peerService';
 
@@ -13,7 +14,8 @@ export class GroupChatService {
     private get: GetStateFunction<ChatState>,
     private chatEvents: EventEmitter,
     private peerService: PeerService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private connectionManager: ConnectionManager
   ) {}
 
   // 创建群聊
@@ -38,7 +40,6 @@ export class GroupChatService {
       name: `${userName}的群聊`,
       isGroup: true,
       users: [{ id: peer.id, name: userName }],
-      connections: [],
       messages: [],
       roomId: groupId, // 使用peer.id作为roomId
       isHost: true,
@@ -84,19 +85,17 @@ export class GroupChatService {
 
       // 如果是群主，向所有连接发送心跳
       if (currentChat.isGroup && (currentChat as GroupChat).isHost) {
-        const { connections } = this.get();
-        if (Object.keys(connections).length > 0) {
-          console.log(`发送心跳到 ${Object.keys(connections).length} 个连接`);
-          Object.values(connections).forEach((conn: any) => {
-            try {
-              conn.send({
-                type: 'KEEP_ALIVE',
-                data: { timestamp: new Date().toISOString() }
-              });
-            } catch (err) {
-              console.error('发送心跳失败:', err);
-            }
+        const connStats = this.connectionManager.getStats();
+        if (connStats.connected > 0) {
+          console.log(`发送心跳到 ${connStats.connected} 个连接`);
+          const sentCount = this.connectionManager.broadcast({
+            type: 'KEEP_ALIVE',
+            data: { timestamp: new Date().toISOString() }
           });
+
+          if (sentCount === 0) {
+            console.warn('心跳发送失败，没有活跃连接');
+          }
         }
       }
     }, 60000); // 每分钟一次
@@ -204,6 +203,9 @@ export class GroupChatService {
         clearTimeout(connectionTimeout);
         console.log('已连接到房主，连接已打开');
 
+        // 将连接注册到连接管理器
+        this.connectionManager.addConnection(cleanedRoomId, conn);
+
         // 创建新的群聊对象
         const newGroupChat: GroupChat = {
           id: cleanedRoomId,
@@ -213,7 +215,6 @@ export class GroupChatService {
             { id: peer.id, name: userName },
             { id: cleanedRoomId, name: '等待房主信息...' }
           ],
-          connections: [conn],
           messages: [],
           roomId: cleanedRoomId,
           isHost: false,
@@ -257,12 +258,6 @@ export class GroupChatService {
         // 添加系统消息
         this.messageService.addSystemMessage('您已加入群聊');
 
-        // 设置连接数据处理
-        conn.on('data', (data: any) => {
-          console.log('收到房主数据:', data);
-          this.peerService.handleReceivedData(data, cleanedRoomId);
-        });
-
         // 设置保持连接活跃的定时器
         this.setupKeepAliveTimer();
       });
@@ -278,24 +273,18 @@ export class GroupChatService {
     const { currentChat, userId, peer } = this.get();
     if (!currentChat || !currentChat.isGroup || !peer) return;
 
-    // 获取所有连接
-    const { connections } = this.get();
-
-    // 通知其他用户
-    Object.values(connections).forEach((conn: any) => {
-      try {
-        conn.send({
-          type: 'USER_LEFT',
-          data: {
-            id: userId
-          }
-        });
-        // 关闭连接
-        conn.close();
-      } catch (err) {
-        console.error('通知用户离开失败:', err);
+    // 通知其他用户即将离开
+    const sentCount = this.connectionManager.broadcast({
+      type: 'USER_LEFT',
+      data: {
+        id: userId
       }
     });
+
+    console.log(`通知了 ${sentCount} 个用户离开信息`);
+
+    // 关闭所有连接
+    this.connectionManager.closeAllConnections();
 
     // 清除保持活跃的定时器
     if (this.keepAliveInterval) {
@@ -315,8 +304,7 @@ export class GroupChatService {
       chats: state.chats.filter((chat: Chat) => chat.id !== currentChat.id),
       currentChat: null,
       messages: [],
-      peer: null,
-      connections: {}
+      peer: null
     }));
 
     // 发送离开事件
@@ -414,6 +402,9 @@ export class GroupChatService {
       clearTimeout(connectionTimeout);
       console.log(`重试成功，已连接到房主: ${roomId}`);
 
+      // 将连接注册到连接管理器
+      this.connectionManager.addConnection(roomId, conn);
+
       // 创建新的群聊对象并处理连接
       this.handleSuccessfulConnection(conn, roomId, userName, connectionInfo.isLocalNetwork);
     });
@@ -456,6 +447,9 @@ export class GroupChatService {
       return;
     }
 
+    // 确保连接已注册到连接管理器
+    this.connectionManager.addConnection(roomId, conn);
+
     // 创建新的群聊对象
     const newGroupChat: GroupChat = {
       id: roomId,
@@ -465,7 +459,6 @@ export class GroupChatService {
         { id: peer.id, name: userName },
         { id: roomId, name: '等待房主信息...' }
       ],
-      connections: [conn],
       messages: [],
       roomId: roomId,
       isHost: false,
@@ -508,17 +501,5 @@ export class GroupChatService {
 
     // 添加系统消息
     this.messageService.addSystemMessage('您已加入群聊');
-
-    // 设置连接数据处理
-    conn.on('data', (data: any) => {
-      console.log('收到房主数据:', data);
-      this.peerService.handleReceivedData(data, roomId);
-    });
-
-    conn.on('close', () => {
-      console.log('与房主的连接已关闭');
-      this.messageService.addSystemMessage('与群聊的连接已断开');
-      this.chatEvents.emit('connectionClosed');
-    });
   }
 }

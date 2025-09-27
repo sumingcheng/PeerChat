@@ -1,3 +1,4 @@
+import { ConnectionManager } from '@/services/connectionManager';
 import { GroupChatService } from '@/services/groupChatService';
 import { MessageService } from '@/services/messageService';
 import { PeerService } from '@/services/peerService';
@@ -9,16 +10,20 @@ import { create } from 'zustand';
 // 事件总线，用于跨组件通信
 export const chatEvents = new EventEmitter();
 
-// ChatState 接口已在 @/types/store 中定义
-
 // 创建 Zustand store
 const useChatStore = create<ChatState>((set, get) => {
   // 初始化服务
-  const peerService = new PeerService(set, get, chatEvents);
-  const messageService = new MessageService(set, get, chatEvents);
-  const groupChatService = new GroupChatService(set, get, chatEvents, peerService, messageService);
-
-  // 服务实例通过事件系统和状态管理进行通信，不暴露到全局
+  const connectionManager = new ConnectionManager();
+  const peerService = new PeerService(set, get, chatEvents, connectionManager);
+  const messageService = new MessageService(set, get, connectionManager);
+  const groupChatService = new GroupChatService(
+    set,
+    get,
+    chatEvents,
+    peerService,
+    messageService,
+    connectionManager
+  );
 
   // 监听网络模式切换请求
   chatEvents.on('requestToggleNetworkMode', () => {
@@ -35,7 +40,7 @@ const useChatStore = create<ChatState>((set, get) => {
     userId: '',
     userName: null,
     peer: null,
-    connections: {},
+    connectionManager: connectionManager,
     isPeerInitialized: false,
     pendingRoomId: null,
     isLocalNetwork: true, // 默认使用局域网模式

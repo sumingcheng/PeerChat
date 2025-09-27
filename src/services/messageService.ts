@@ -1,13 +1,13 @@
 import { nanoid } from 'nanoid';
-import { EventEmitter } from '@/utils/eventEmitter';
 import { Chat, GroupChat, Message } from '@/types/chat';
 import { ChatState, SetStateFunction, GetStateFunction } from '@/types/store';
+import { ConnectionManager } from './connectionManager';
 
 export class MessageService {
   constructor(
     private set: SetStateFunction<ChatState>,
     private get: GetStateFunction<ChatState>,
-    private readonly chatEvents: EventEmitter
+    private readonly connectionManager: ConnectionManager
   ) {}
 
   // 发送消息
@@ -54,33 +54,25 @@ export class MessageService {
       const groupChat = currentChat as GroupChat;
 
       if (groupChat.isHost) {
-        // 如果是主持人，发送给所有连接的成员
-        const { connections } = this.get();
-        Object.values(connections).forEach((conn) => {
-          try {
-            conn.send({
-              type: 'MESSAGE',
-              data: newMessage
-            });
-          } catch (error) {
-            console.error('发送消息失败:', error);
-            // 可以在这里更新消息状态为错误
-          }
+        // 如果是主持人，广播给所有连接的成员
+        const sentCount = this.connectionManager.broadcast({
+          type: 'MESSAGE',
+          data: newMessage
         });
+
+        if (sentCount === 0) {
+          console.warn('没有活跃的连接，消息未发送');
+        }
       } else {
-        // 如果是成员，发送给主持人
-        if (groupChat.connections && groupChat.connections.length > 0) {
-          groupChat.connections.forEach((conn) => {
-            try {
-              conn.send({
-                type: 'MESSAGE',
-                data: newMessage
-              });
-            } catch (error) {
-              console.error('发送消息失败:', error);
-              // 可以在这里更新消息状态为错误
-            }
-          });
+        // 如果是成员，发送给主持人 - 这里需要知道主持人的 peerId
+        // 通常主持人的 peerId 就是 roomId
+        const success = this.connectionManager.sendData(groupChat.roomId, {
+          type: 'MESSAGE',
+          data: newMessage
+        });
+
+        if (!success) {
+          console.error('发送消息给主持人失败');
         }
       }
     }

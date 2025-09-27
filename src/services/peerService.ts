@@ -1,8 +1,9 @@
-import Peer, { DataConnection } from 'peerjs';
+import Peer from 'peerjs';
 import { nanoid } from 'nanoid';
 import { EventEmitter } from '@/utils/eventEmitter';
 import { Chat, GroupChat, Message, User } from '@/types/chat';
 import { ChatState, SetStateFunction, GetStateFunction, PeerMessage } from '@/types/store';
+import { ConnectionManager } from './connectionManager';
 import { cleanRoomId } from '@/utils/roomUtils';
 
 export class PeerService {
@@ -11,10 +12,45 @@ export class PeerService {
   constructor(
     private set: SetStateFunction<ChatState>,
     private get: GetStateFunction<ChatState>,
-    private chatEvents: EventEmitter
+    private chatEvents: EventEmitter,
+    private connectionManager: ConnectionManager
   ) {
     // 检测是否在局域网环境
     this.detectLocalNetwork();
+
+    // 设置连接管理器的全局事件监听器（只设置一次）
+    this.setupConnectionManagerListeners();
+  }
+
+  // 设置连接管理器的全局事件监听器
+  private setupConnectionManagerListeners() {
+    // 监听连接数据事件
+    this.connectionManager.on('connection:data', ({ peerId, data }: any) => {
+      console.log(`收到来自 ${peerId} 的数据:`, data);
+      this.handleReceivedData(data, peerId);
+    });
+
+    // 监听连接关闭事件
+    this.connectionManager.on('connection:closed', ({ peerId }: any) => {
+      console.log('连接已关闭:', peerId);
+
+      // 检查是否是与房主的连接断开
+      const { currentChat } = this.get();
+      if (currentChat?.isGroup) {
+        const groupChat = currentChat as GroupChat;
+        if (peerId === groupChat.roomId && !groupChat.isHost) {
+          // 与房主的连接断开，发送系统消息
+          this.chatEvents.emit('error', '与群聊的连接已断开');
+        }
+      }
+
+      this.handleUserLeft(peerId);
+    });
+
+    // 监听连接错误事件
+    this.connectionManager.on('connection:error', ({ peerId, error }: any) => {
+      console.error(`与 ${peerId} 的连接发生错误:`, error);
+    });
   }
 
   // 检测是否在局域网环境
@@ -226,41 +262,8 @@ export class PeerService {
       const peerId = conn.peer;
       console.log('收到新连接:', peerId);
 
-      // 等待连接打开
-      conn.on('open', () => {
-        console.log(`与 ${peerId} 的连接已打开`);
-
-        // 保存连接
-        this.set((state: ChatState) => ({
-          connections: { ...state.connections, [peerId]: conn }
-        }));
-
-        // 处理数据
-        conn.on('data', (data: any) => {
-          console.log(`收到来自 ${peerId} 的数据:`, data);
-          this.handleReceivedData(data, peerId);
-        });
-      });
-
-      // 处理连接关闭
-      conn.on('close', () => {
-        console.log('连接已关闭:', peerId);
-
-        // 从连接列表中移除
-        this.set((state: ChatState) => {
-          const newConnections = { ...state.connections };
-          delete newConnections[peerId];
-          return { connections: newConnections };
-        });
-
-        // 处理用户离开逻辑
-        this.handleUserLeft(peerId);
-      });
-
-      // 处理连接错误
-      conn.on('error', (err) => {
-        console.error(`与 ${peerId} 的连接发生错误:`, err);
-      });
+      // 立即将连接交给管理器处理
+      this.connectionManager.addConnection(peerId, conn);
     });
 
     // 处理错误
@@ -341,23 +344,20 @@ export class PeerService {
 
     // 如果是主持人，将消息转发给其他所有成员
     if (currentChat && currentChat.isGroup && (currentChat as GroupChat).isHost) {
-      const { connections } = this.get();
-
-      // 转发给除了发送者之外的所有连接
-      Object.entries(connections).forEach(([connPeerId, conn]: [string, DataConnection]) => {
-        if (connPeerId !== peerId) {
-          conn.send({
-            type: 'MESSAGE',
-            data: newMessage
-          });
-        }
-      });
+      // 广播消息给除了发送者之外的所有连接
+      this.connectionManager.broadcast(
+        {
+          type: 'MESSAGE',
+          data: newMessage
+        },
+        [peerId]
+      ); // 排除发送者
     }
   }
 
   // 处理新用户数据
   handleNewUserData(data: User, peerId: string) {
-    const { currentChat, connections } = this.get();
+    const { currentChat } = this.get();
     console.log(`处理新用户加入: ${data.name} (${data.id}), 连接ID: ${peerId}`);
 
     if (currentChat && currentChat.isGroup) {
@@ -370,16 +370,17 @@ export class PeerService {
 
       // 如果是主持人，广播新用户信息给所有其他用户
       if (groupChat.isHost) {
-        console.log(`作为主持人，广播新用户信息给其他 ${Object.keys(connections).length} 个用户`);
-        Object.entries(connections).forEach(([connPeerId, conn]: [string, any]) => {
-          if (connPeerId !== peerId) {
-            console.log(`向用户 ${connPeerId} 发送新用户加入通知`);
-            conn.send({
-              type: 'USER_JOINED',
-              data: data
-            });
-          }
-        });
+        const connStats = this.connectionManager.getStats();
+        console.log(`作为主持人，广播新用户信息给其他 ${connStats.connected} 个用户`);
+
+        // 广播给除了新用户之外的所有连接
+        this.connectionManager.broadcast(
+          {
+            type: 'USER_JOINED',
+            data: data
+          },
+          [peerId]
+        );
 
         // 发送当前用户列表和消息历史给新用户
         const { messages } = this.get();
@@ -387,16 +388,16 @@ export class PeerService {
           `向新用户发送房间状态，包含 ${updatedUsers.length} 个用户和 ${messages.length} 条消息`
         );
 
-        if (connections[peerId]) {
-          connections[peerId].send({
-            type: 'ROOM_STATE',
-            data: {
-              users: updatedUsers,
-              messages: messages
-            }
-          });
-        } else {
-          console.error(`无法找到与用户 ${peerId} 的连接`);
+        const success = this.connectionManager.sendData(peerId, {
+          type: 'ROOM_STATE',
+          data: {
+            users: updatedUsers,
+            messages: messages
+          }
+        });
+
+        if (!success) {
+          console.error(`无法向用户 ${peerId} 发送房间状态`);
         }
       }
 
@@ -576,12 +577,13 @@ export class PeerService {
     console.log(`收到来自 ${peerId} 的心跳`, data);
 
     // 如果有连接，回复心跳确认
-    const { connections } = this.get();
-    if (connections[peerId]) {
-      connections[peerId].send({
-        type: 'KEEP_ALIVE_ACK',
-        data: { timestamp: new Date().toISOString() }
-      });
+    const success = this.connectionManager.sendData(peerId, {
+      type: 'KEEP_ALIVE_ACK',
+      data: { timestamp: new Date().toISOString() }
+    });
+
+    if (!success) {
+      console.warn(`无法向 ${peerId} 发送心跳确认`);
     }
   }
 

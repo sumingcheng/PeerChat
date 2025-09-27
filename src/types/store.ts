@@ -1,5 +1,6 @@
-import Peer, { DataConnection } from 'peerjs';
+import Peer from 'peerjs';
 import { Chat, Message, User } from './chat';
+import { ConnectionManager } from '@/services/connectionManager';
 
 // 定义完整的聊天状态接口
 export interface ChatState {
@@ -16,7 +17,7 @@ export interface ChatState {
 
   // PeerJS 相关
   peer: Peer | null;
-  connections: Record<string, DataConnection>;
+  connectionManager: ConnectionManager;
   isPeerInitialized: boolean;
   pendingRoomId: string | null;
 
