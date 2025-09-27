@@ -1,6 +1,6 @@
-import { PropsWithChildren } from 'react'
-import App from '@/App'
+import { PropsWithChildren } from 'react';
+import App from '@/App';
 
 export const BaseLayout = ({ children }: PropsWithChildren) => {
-  return <App>{children}</App>
-} 
+  return <App>{children}</App>;
+};

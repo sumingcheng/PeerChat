@@ -1,4 +1,4 @@
-import * as SeparatorPrimitive from '@radix-ui/react-separator'
+import * as SeparatorPrimitive from '@radix-ui/react-separator';
 
 export function Separator({
   className = '',
@@ -13,5 +13,5 @@ export function Separator({
       orientation={orientation}
       {...props}
     />
-  )
-} 
+  );
+}

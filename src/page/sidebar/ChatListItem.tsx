@@ -1,15 +1,15 @@
-import { ChatListItemProps } from '@/types/chat.ts'
-import { Root as SeparatorRoot } from '@radix-ui/react-separator'
-import React from 'react'
-import Avatar from '../common/Avatar.tsx'
-import Badge from '../common/Badge.tsx'
+import { ChatListItemProps } from '@/types/chat.ts';
+import { Root as SeparatorRoot } from '@radix-ui/react-separator';
+import React from 'react';
+import Avatar from '../common/Avatar.tsx';
+import Badge from '../common/Badge.tsx';
 
-const ChatListItem: React.FC<ChatListItemProps> = ({ 
-  chat, 
-  isActive, 
-  onClick, 
+const ChatListItem: React.FC<ChatListItemProps> = ({
+  chat,
+  isActive,
+  onClick,
   unreadCount,
-  isConnecting = false 
+  isConnecting = false
 }) => {
   return (
     <>
@@ -21,7 +21,7 @@ const ChatListItem: React.FC<ChatListItemProps> = ({
         <div className="relative">
           <Avatar alt={chat.name} size="md" />
           {unreadCount && unreadCount > 0 && <Badge count={unreadCount} />}
-          
+
           {/* 连接中状态指示器 */}
           {isConnecting && isActive && (
             <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white">
@@ -39,18 +39,14 @@ const ChatListItem: React.FC<ChatListItemProps> = ({
             </h3>
             {chat.lastMessageTime && (
               <span className="text-xs text-gray-500">
-                {new Date(chat.lastMessageTime).toLocaleTimeString([], { 
-                  hour: '2-digit', 
-                  minute: '2-digit' 
+                {new Date(chat.lastMessageTime).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit'
                 })}
               </span>
             )}
           </div>
-          {chat.lastMessage && (
-            <p className="text-sm text-gray-500 truncate">
-              {chat.lastMessage}
-            </p>
-          )}
+          {chat.lastMessage && <p className="text-sm text-gray-500 truncate">{chat.lastMessage}</p>}
         </div>
       </div>
       <SeparatorRoot className="h-[1px] bg-gray-100" />
@@ -58,4 +54,4 @@ const ChatListItem: React.FC<ChatListItemProps> = ({
   );
 };
 
-export default ChatListItem; 
+export default ChatListItem;

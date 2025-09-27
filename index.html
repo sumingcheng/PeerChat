@@ -1,28 +1,26 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PeerChat - 基于 WebRTC 的实时聊天应用</title>
+    <!-- GitHub Pages 重定向脚本 -->
+    <script type="text/javascript">
+      // 单页应用的 GitHub Pages 重定向处理
+      (function () {
+        // 如果是重定向过来的，从 URL 中提取路径
+        var redirect = sessionStorage.redirect;
+        delete sessionStorage.redirect;
+        if (redirect && redirect != location.href) {
+          history.replaceState(null, null, redirect);
+        }
+      })();
+    </script>
+  </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PeerChat - 基于 WebRTC 的实时聊天应用</title>
-  <!-- GitHub Pages 重定向脚本 -->
-  <script type="text/javascript">
-    // 单页应用的 GitHub Pages 重定向处理
-    (function () {
-      // 如果是重定向过来的，从 URL 中提取路径
-      var redirect = sessionStorage.redirect
-      delete sessionStorage.redirect
-      if (redirect && redirect != location.href) {
-        history.replaceState(null, null, redirect)
-      }
-    })();
-  </script>
-</head>
-
-<body>
-  <div id="root"></div>
-  <script type="module" src="/src/main.tsx"></script>
-</body>
-
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>

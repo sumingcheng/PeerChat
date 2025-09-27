@@ -7,11 +7,11 @@ const Badge: React.FC<BadgeProps> = ({ count, className = '' }) => {
 
   return (
     <Theme>
-      <div 
+      <div
         className={`absolute -top-1 -right-1 bg-red-500 text-white 
           rounded-full min-w-[20px] h-5 flex items-center justify-center 
           text-xs px-1.5 ${className}`}
-        style={{ 
+        style={{
           boxShadow: '0 0 0 2px white',
           transform: 'scale(0.9)'
         }}
@@ -22,4 +22,4 @@ const Badge: React.FC<BadgeProps> = ({ count, className = '' }) => {
   );
 };
 
-export default Badge; 
+export default Badge;

@@ -7,8 +7,8 @@ interface ChatLayoutProps {
 }
 
 const ChatLayout: React.FC<ChatLayoutProps> = ({ children }) => {
-  const isConnecting = useChatStore(state => state.isConnecting);
-  
+  const isConnecting = useChatStore((state) => state.isConnecting);
+
   return (
     <div className="flex h-screen bg-gray-100 relative">
       {/* 全局加载指示器 */}
@@ -17,15 +17,13 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({ children }) => {
           <div className="h-full bg-blue-500 animate-pulse"></div>
         </div>
       )}
-      
+
       <div className="w-80 bg-white border-r border-gray-200">
         <Sidebar />
       </div>
-      <div className="flex-1 flex flex-col">
-        {children}
-      </div>
+      <div className="flex-1 flex flex-col">{children}</div>
     </div>
   );
 };
 
-export default ChatLayout; 
+export default ChatLayout;

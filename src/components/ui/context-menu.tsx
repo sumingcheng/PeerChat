@@ -1,17 +1,17 @@
-import * as ContextMenuPrimitive from '@radix-ui/react-context-menu'
+import * as ContextMenuPrimitive from '@radix-ui/react-context-menu';
 
-export const ContextMenu = ContextMenuPrimitive.Root
-export const ContextMenuTrigger = ContextMenuPrimitive.Trigger
-export const ContextMenuContent = ContextMenuPrimitive.Content
-export const ContextMenuItem = ContextMenuPrimitive.Item
-export const ContextMenuSeparator = ContextMenuPrimitive.Separator
+export const ContextMenu = ContextMenuPrimitive.Root;
+export const ContextMenuTrigger = ContextMenuPrimitive.Trigger;
+export const ContextMenuContent = ContextMenuPrimitive.Content;
+export const ContextMenuItem = ContextMenuPrimitive.Item;
+export const ContextMenuSeparator = ContextMenuPrimitive.Separator;
 
 export function ContextMenuRoot({
   children,
   content
 }: {
-  children: React.ReactNode
-  content: React.ReactNode
+  children: React.ReactNode;
+  content: React.ReactNode;
 }) {
   return (
     <ContextMenu>
@@ -20,5 +20,5 @@ export function ContextMenuRoot({
         {content}
       </ContextMenuContent>
     </ContextMenu>
-  )
-} 
+  );
+}

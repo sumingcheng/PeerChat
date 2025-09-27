@@ -1,7 +1,6 @@
-import App from '@/App'
-import ErrorPage from '@/page/error'
-import { createHashRouter } from 'react-router-dom'
-
+import App from '@/App';
+import ErrorPage from '@/page/error';
+import { createHashRouter } from 'react-router-dom';
 
 export const router = createHashRouter([
   {
@@ -15,5 +14,5 @@ export const router = createHashRouter([
   {
     path: '*',
     element: <ErrorPage />
-  },
-]) 
+  }
+]);

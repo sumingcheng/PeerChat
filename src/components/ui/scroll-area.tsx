@@ -1,4 +1,4 @@
-import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area'
+import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
 
 export function ScrollArea({
   children,
@@ -6,10 +6,7 @@ export function ScrollArea({
   ...props
 }: ScrollAreaPrimitive.ScrollAreaProps) {
   return (
-    <ScrollAreaPrimitive.Root
-      className={`relative overflow-hidden ${className}`}
-      {...props}
-    >
+    <ScrollAreaPrimitive.Root className={`relative overflow-hidden ${className}`} {...props}>
       <ScrollAreaPrimitive.Viewport className="h-full w-full rounded-[inherit]">
         {children}
       </ScrollAreaPrimitive.Viewport>
@@ -20,5 +17,5 @@ export function ScrollArea({
         <ScrollAreaPrimitive.Thumb className="relative flex-1 rounded-full bg-gray-300" />
       </ScrollAreaPrimitive.Scrollbar>
     </ScrollAreaPrimitive.Root>
-  )
-} 
+  );
+}

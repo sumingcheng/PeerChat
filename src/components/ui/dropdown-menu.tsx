@@ -1,10 +1,10 @@
-import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu'
+import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
 
-export const DropdownMenu = DropdownMenuPrimitive.Root
-export const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger
-export const DropdownMenuGroup = DropdownMenuPrimitive.Group
-export const DropdownMenuSub = DropdownMenuPrimitive.Sub
-export const DropdownMenuRadioGroup = DropdownMenuPrimitive.RadioGroup
+export const DropdownMenu = DropdownMenuPrimitive.Root;
+export const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
+export const DropdownMenuGroup = DropdownMenuPrimitive.Group;
+export const DropdownMenuSub = DropdownMenuPrimitive.Sub;
+export const DropdownMenuRadioGroup = DropdownMenuPrimitive.RadioGroup;
 
 export function DropdownMenuContent({
   children,
@@ -20,7 +20,7 @@ export function DropdownMenuContent({
         {children}
       </DropdownMenuPrimitive.Content>
     </DropdownMenuPrimitive.Portal>
-  )
+  );
 }
 
 export function DropdownMenuItem({
@@ -35,7 +35,7 @@ export function DropdownMenuItem({
     >
       {children}
     </DropdownMenuPrimitive.Item>
-  )
+  );
 }
 
 export function DropdownMenuSeparator({
@@ -47,5 +47,5 @@ export function DropdownMenuSeparator({
       className={`-mx-1 my-1 h-px bg-gray-200 ${className}`}
       {...props}
     />
-  )
-} 
+  );
+}

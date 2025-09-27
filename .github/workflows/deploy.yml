@@ -3,10 +3,10 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main  # 当推送到 main 分支时触发
+      - main # 当推送到 main 分支时触发
 
 permissions:
-  contents: write  # 需要写入权限来部署到 GitHub Pages
+  contents: write # 需要写入权限来部署到 GitHub Pages
 
 jobs:
   build-and-deploy:
@@ -23,8 +23,8 @@ jobs:
       - name: Setup pnpm 📦
         uses: pnpm/action-setup@v2
         with:
-          version: 9.1.2  # 使用 pnpm 8.x 版本，您可以根据需要调整
-          run_install: false  # 我们将在后面手动运行安装
+          version: 9.1.2 # 使用 pnpm 8.x 版本，您可以根据需要调整
+          run_install: false # 我们将在后面手动运行安装
 
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -51,5 +51,5 @@ jobs:
       - name: Deploy to GitHub Pages 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: dist  # 要部署的文件夹
-          branch: gh-pages  # 部署到的分支 
+          folder: dist # 要部署的文件夹
+          branch: gh-pages # 部署到的分支

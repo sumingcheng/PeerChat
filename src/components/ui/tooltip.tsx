@@ -1,8 +1,8 @@
-import * as TooltipPrimitive from '@radix-ui/react-tooltip'
+import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 
-export const TooltipProvider = TooltipPrimitive.Provider
-export const Tooltip = TooltipPrimitive.Root
-export const TooltipTrigger = TooltipPrimitive.Trigger
+export const TooltipProvider = TooltipPrimitive.Provider;
+export const Tooltip = TooltipPrimitive.Root;
+export const TooltipTrigger = TooltipPrimitive.Trigger;
 
 export function TooltipContent({
   children,
@@ -17,5 +17,5 @@ export function TooltipContent({
       {children}
       <TooltipPrimitive.Arrow className="fill-gray-800" />
     </TooltipPrimitive.Content>
-  )
-} 
+  );
+}

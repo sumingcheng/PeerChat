@@ -1,8 +1,8 @@
-import * as DialogPrimitive from '@radix-ui/react-dialog'
-import { FiX } from 'react-icons/fi'
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { FiX } from 'react-icons/fi';
 
-export const Dialog = DialogPrimitive.Root
-export const DialogTrigger = DialogPrimitive.Trigger
+export const Dialog = DialogPrimitive.Root;
+export const DialogTrigger = DialogPrimitive.Trigger;
 
 export function DialogContent({
   children,
@@ -22,13 +22,11 @@ export function DialogContent({
         </DialogPrimitive.Close>
       </DialogPrimitive.Content>
     </DialogPrimitive.Portal>
-  )
+  );
 }
 
 export const DialogHeader = ({ children }: { children: React.ReactNode }) => (
   <div className="mb-4">
-    <DialogPrimitive.Title className="text-xl font-bold">
-      {children}
-    </DialogPrimitive.Title>
+    <DialogPrimitive.Title className="text-xl font-bold">{children}</DialogPrimitive.Title>
   </div>
-) 
+);

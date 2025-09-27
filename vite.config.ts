@@ -1,8 +1,8 @@
-import react from '@vitejs/plugin-react'
-import { resolve } from 'path'
-import AutoImport from 'unplugin-auto-import/vite'
-import { defineConfig } from 'vite'
-import path from 'path'
+import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
+import AutoImport from 'unplugin-auto-import/vite';
+import { defineConfig } from 'vite';
+import path from 'path';
 
 export default defineConfig({
   server: {
@@ -13,7 +13,7 @@ export default defineConfig({
     outDir: 'dist',
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index.html'),
+        main: resolve(__dirname, 'index.html')
       }
     },
     copyPublicDir: true,
@@ -22,19 +22,16 @@ export default defineConfig({
   plugins: [
     react(),
     AutoImport({
-      imports: [
-        'react',
-        'react-router-dom',
-      ],
+      imports: ['react', 'react-router-dom'],
       dts: 'src/auto-imports.d.ts',
       eslintrc: {
-        enabled: true,
-      },
-    }),
+        enabled: true
+      }
+    })
   ],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(__dirname, './src')
     },
     extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json']
   },
@@ -43,9 +40,9 @@ export default defineConfig({
     preprocessorOptions: {
       scss: {
         quietDeps: true,
-        charset: false,
-      },
-    },
+        charset: false
+      }
+    }
   },
-  base: '/PeerChat/',
-}) 
+  base: '/PeerChat/'
+});

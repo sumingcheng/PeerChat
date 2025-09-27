@@ -1,32 +1,32 @@
-import { chatEvents } from '@/store/useChatStore.ts'
-import useChatStore from '@/store/useChatStore.ts'
-import { Content, Description, Overlay, Portal, Root, Title } from '@radix-ui/react-dialog'
-import { Root as SeparatorRoot } from '@radix-ui/react-separator'
-import React, { useCallback, useEffect, useState } from 'react'
-import toast from 'react-hot-toast'
-import GroupChatHeader from '../group/GroupChatHeader.tsx'
-import GroupUserList from '../group/GroupUserList.tsx'
-import ChatInput from '../input/ChatInput.tsx'
-import MessageList from './MessageList.tsx'
-import { GroupChat } from '@/types/chat.ts'
-import { cleanRoomId } from '@/utils/roomUtils.ts'
+import { chatEvents } from '@/store/useChatStore.ts';
+import useChatStore from '@/store/useChatStore.ts';
+import { Content, Description, Overlay, Portal, Root, Title } from '@radix-ui/react-dialog';
+import { Root as SeparatorRoot } from '@radix-ui/react-separator';
+import React, { useCallback, useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+import GroupChatHeader from '../group/GroupChatHeader.tsx';
+import GroupUserList from '../group/GroupUserList.tsx';
+import ChatInput from '../input/ChatInput.tsx';
+import MessageList from './MessageList.tsx';
+import { GroupChat } from '@/types/chat.ts';
+import { cleanRoomId } from '@/utils/roomUtils.ts';
 
 // 动画常量
 const overlayShow = 'animate-[overlay-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 const contentShow = 'animate-[content-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
 
 const ChatPanel: React.FC = () => {
-  const currentChat = useChatStore(state => state.currentChat);
-  const createGroupChat = useChatStore(state => state.createGroupChat);
-  const userName = useChatStore(state => state.userName);
-  const setUserName = useChatStore(state => state.setUserName);
-  const isConnecting = useChatStore(state => state.isConnecting);
-  const joinGroupChat = useChatStore(state => state.joinGroupChat);
-  const pendingRoomId = useChatStore(state => state.pendingRoomId);
-  const isPeerInitialized = useChatStore(state => state.isPeerInitialized);
-  const chats = useChatStore(state => state.chats);
-  const setCurrentChat = useChatStore(state => state.setCurrentChat);
-  
+  const currentChat = useChatStore((state) => state.currentChat);
+  const createGroupChat = useChatStore((state) => state.createGroupChat);
+  const userName = useChatStore((state) => state.userName);
+  const setUserName = useChatStore((state) => state.setUserName);
+  const isConnecting = useChatStore((state) => state.isConnecting);
+  const joinGroupChat = useChatStore((state) => state.joinGroupChat);
+  const pendingRoomId = useChatStore((state) => state.pendingRoomId);
+  const isPeerInitialized = useChatStore((state) => state.isPeerInitialized);
+  const chats = useChatStore((state) => state.chats);
+  const setCurrentChat = useChatStore((state) => state.setCurrentChat);
+
   const [nameDialogOpen, setNameDialogOpen] = useState(false);
   const [tempUserName, setTempUserName] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -43,18 +43,18 @@ const ChatPanel: React.FC = () => {
       setNameDialogOpen(true);
     }
   }, [userName]);
-  
+
   // 当用户名设置后，如果有待处理的roomId，则加入群聊
   useEffect(() => {
     if (userName && pendingRoomId && isPeerInitialized) {
       console.log('用户名已设置，PeerJS已初始化，加入群聊:', pendingRoomId);
-      
+
       // 显示正在连接的提示
-      toast.loading(`正在连接到群聊...`, { 
+      toast.loading(`正在连接到群聊...`, {
         id: 'connecting',
         duration: 20000 // 设置较长的持续时间，避免自动消失
       });
-      
+
       // 加入群聊
       joinGroupChat?.(pendingRoomId);
     }
@@ -64,50 +64,48 @@ const ChatPanel: React.FC = () => {
   useEffect(() => {
     const handleError = (message: string) => {
       setErrorMessage(message);
-      
+
       // 重置加入群聊的状态
       setIsJoining(false);
-      
+
       // 检查是否是连接错误
       if (message.includes('Could not connect to peer')) {
         // 提取对等节点ID
         const peerId = message.match(/Could not connect to peer (\w+)/)?.[1];
-        
+
         toast.error(
           <div>
             <div>连接失败: 无法连接到对等节点</div>
             {peerId && <div className="text-xs mt-1">节点ID: {peerId}</div>}
-            <div className="text-xs mt-1">
-              可能原因: 网络问题、防火墙限制或节点不存在
-            </div>
-          </div>, 
+            <div className="text-xs mt-1">可能原因: 网络问题、防火墙限制或节点不存在</div>
+          </div>,
           { duration: 5000 }
         );
-        
+
         // 清除连接中状态
         toast.dismiss('connecting');
       } else {
         toast.error(message);
       }
-      
+
       // 5秒后清除错误消息
       setTimeout(() => {
         setErrorMessage(null);
       }, 5000);
     };
-    
+
     const handleGroupCreated = (_data?: { isLocalNetwork?: boolean }) => {
       toast.success('群聊创建成功');
     };
-    
+
     const handleJoinedGroup = (groupChat?: GroupChat) => {
       toast.dismiss('connecting'); // 清除连接中的提示
-      
+
       // 重置加入群聊的状态
       setJoinDialogOpen(false);
       setRoomIdInput('');
       setIsJoining(false);
-      
+
       if (groupChat) {
         toast.success(
           <div>
@@ -119,16 +117,16 @@ const ChatPanel: React.FC = () => {
         toast.success('成功加入群聊');
       }
     };
-    
+
     const handleLeftGroup = () => {
       toast('已离开群聊', { icon: '🔔' });
     };
-    
+
     const handleConnecting = (peerId: string) => {
       toast.loading(`正在连接到节点 ${peerId}...`, { id: 'connecting' });
     };
-    
-    const handlePeerInitialized = (data: { id: string, isLocalNetwork?: boolean }) => {
+
+    const handlePeerInitialized = (data: { id: string; isLocalNetwork?: boolean }) => {
       toast.success(
         <div className="w-30">
           <div>连接成功！</div>
@@ -137,12 +135,12 @@ const ChatPanel: React.FC = () => {
         { duration: 3000 }
       );
     };
-    
+
     const handleNetworkModeChanged = (data: { isLocalNetwork: boolean }) => {
       const mode = data.isLocalNetwork ? '局域网' : '互联网';
       toast.success(`已切换到${mode}模式`);
     };
-    
+
     // 使用新的 EventEmitter 类的方法
     chatEvents.on('error', handleError);
     chatEvents.on('groupCreated', handleGroupCreated);
@@ -151,7 +149,7 @@ const ChatPanel: React.FC = () => {
     chatEvents.on('connecting', handleConnecting);
     chatEvents.on('peerInitialized', handlePeerInitialized);
     chatEvents.on('networkModeChanged', handleNetworkModeChanged);
-    
+
     return () => {
       // 移除事件监听
       chatEvents.off('error', handleError);
@@ -181,7 +179,7 @@ const ChatPanel: React.FC = () => {
       toast.error('请输入有效的用户名');
     }
   };
-  
+
   const handleToggleNetworkMode = () => {
     // 使用事件系统发送切换请求 - 正确的架构模式
     chatEvents.emit('requestToggleNetworkMode');
@@ -193,28 +191,28 @@ const ChatPanel: React.FC = () => {
       toast.error('请输入有效的群聊ID或链接');
       return;
     }
-    
+
     if (!userName) {
       setNameDialogOpen(true);
       return;
     }
-    
+
     setIsJoining(true);
-    
+
     // 显示正在连接的提示
-    toast.loading(`正在连接到群聊...`, { 
+    toast.loading(`正在连接到群聊...`, {
       id: 'connecting',
       duration: 20000 // 设置较长的持续时间，避免自动消失
     });
-    
+
     // 使用工具函数清理输入
     const cleanedRoomId = cleanRoomId(roomIdInput);
-    
+
     // 检查是否已经加入了该群聊
-    const existingChat = chats.find(chat => 
-      chat.isGroup && (chat as GroupChat).roomId === cleanedRoomId
+    const existingChat = chats.find(
+      (chat) => chat.isGroup && (chat as GroupChat).roomId === cleanedRoomId
     );
-    
+
     if (existingChat) {
       toast.dismiss('connecting');
       toast.success('已经加入过该群聊，直接切换');
@@ -224,22 +222,22 @@ const ChatPanel: React.FC = () => {
       setIsJoining(false);
       return;
     }
-    
+
     // 加入群聊
     joinGroupChat?.(cleanedRoomId);
   };
-  
+
   const handleJoinFromUrl = () => {
     processUrlInput();
   };
-  
+
   const processUrlInput = () => {
     try {
       // 检查是否是URL
       if (roomIdInput.startsWith('http')) {
         const url = new URL(roomIdInput);
         const roomIdParam = url.searchParams.get('roomId');
-        
+
         if (roomIdParam) {
           // 更新输入框显示提取出的roomId
           setRoomIdInput(roomIdParam);
@@ -256,7 +254,7 @@ const ChatPanel: React.FC = () => {
       toast.error('无效的链接格式');
     }
   };
-  
+
   // 处理回车键提交
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !isJoining) {
@@ -270,10 +268,8 @@ const ChatPanel: React.FC = () => {
         <div className="text-center space-y-2">
           <h2 className="text-2xl font-semibold text-gray-700">开始一个新的对话</h2>
           <p className="text-gray-500">创建一个群聊，邀请好友加入实时对话</p>
-          {userName && (
-            <p className="text-sm text-blue-500 font-bold">当前用户: {userName}</p>
-          )}
-          
+          {userName && <p className="text-sm text-blue-500 font-bold">当前用户: {userName}</p>}
+
           {/* 暂时隐藏网络模式切换功能 */}
           {/* {isLocalNetwork !== null && (
             <p className="text-xs text-gray-500">
@@ -286,14 +282,17 @@ const ChatPanel: React.FC = () => {
               </button>
             </p>
           )} */}
-          
+
           {/* 显示错误消息 */}
           {errorMessage && (
             <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
               <div className="flex items-center">
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
                 <div>
@@ -308,21 +307,37 @@ const ChatPanel: React.FC = () => {
               </div>
             </div>
           )}
-          
+
           {/* 显示连接状态 */}
           {isConnecting && (
             <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md text-blue-600 text-sm">
               <div className="flex items-center">
-                <svg className="w-5 h-5 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <svg
+                  className="w-5 h-5 mr-2 animate-spin"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
                 </svg>
                 <span>正在连接中，请稍候...</span>
               </div>
             </div>
           )}
         </div>
-        
+
         <div className="flex flex-wrap gap-4 justify-center">
           <button
             onClick={handleCreateGroupChat}
@@ -332,13 +347,16 @@ const ChatPanel: React.FC = () => {
               ${isConnecting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'}`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                d="M12 4v16m8-8H4" 
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
               />
             </svg>
             <span>创建群聊</span>
           </button>
-          
+
           <button
             onClick={() => setJoinDialogOpen(true)}
             disabled={isConnecting}
@@ -347,8 +365,11 @@ const ChatPanel: React.FC = () => {
               ${isConnecting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-600'}`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" 
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
               />
             </svg>
             <span>加入群聊</span>
@@ -359,7 +380,7 @@ const ChatPanel: React.FC = () => {
         <Root open={nameDialogOpen} onOpenChange={setNameDialogOpen}>
           <Portal>
             <Overlay className={`fixed inset-0 bg-black/30 ${overlayShow}`} />
-            <Content 
+            <Content
               className={`fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] 
                 w-[90vw] max-w-[450px] rounded-lg bg-white p-6 shadow-xl focus:outline-none
                 ${contentShow}`}
@@ -380,9 +401,7 @@ const ChatPanel: React.FC = () => {
                 {userName ? '修改用户名' : '设置您的用户名'}
               </Title>
               <Description className="text-gray-500 mb-4">
-                {userName 
-                  ? '请输入您的新用户名：' 
-                  : '在开始使用前，请先设置您的用户名：'}
+                {userName ? '请输入您的新用户名：' : '在开始使用前，请先设置您的用户名：'}
               </Description>
               <input
                 type="text"
@@ -411,20 +430,18 @@ const ChatPanel: React.FC = () => {
             </Content>
           </Portal>
         </Root>
-        
+
         {/* 加入群聊对话框 */}
         <Root open={joinDialogOpen} onOpenChange={setJoinDialogOpen}>
           <Portal>
             <Overlay className={`fixed inset-0 bg-black/30 ${overlayShow}`} />
-            <Content 
+            <Content
               className={`fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] 
                 w-[90vw] max-w-[450px] rounded-lg bg-white p-6 shadow-xl focus:outline-none
                 ${contentShow}`}
             >
               <Title className="text-xl font-semibold mb-4">加入群聊</Title>
-              <Description className="text-gray-500 mb-4">
-                请输入群聊ID或邀请链接：
-              </Description>
+              <Description className="text-gray-500 mb-4">请输入群聊ID或邀请链接：</Description>
               <div className="mb-4">
                 <input
                   type="text"
@@ -441,7 +458,7 @@ const ChatPanel: React.FC = () => {
                     onClick={handleJoinFromUrl}
                     disabled={isJoining || !roomIdInput.trim()}
                     className={`text-sm text-blue-500 hover:text-blue-600
-                      ${(isJoining || !roomIdInput.trim()) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      ${isJoining || !roomIdInput.trim() ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     从链接提取ID
                   </button>
@@ -462,44 +479,57 @@ const ChatPanel: React.FC = () => {
                   onClick={handleJoinGroupChat}
                   disabled={isJoining || !roomIdInput.trim()}
                   className={`px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center
-                    ${(isJoining || !roomIdInput.trim()) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    ${isJoining || !roomIdInput.trim() ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   {isJoining ? (
                     <>
                       <svg className="w-4 h-4 mr-1 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
                       </svg>
                       加入中
                     </>
-                  ) : '加入'}
+                  ) : (
+                    '加入'
+                  )}
                 </button>
               </div>
             </Content>
           </Portal>
         </Root>
-        
+
         {/* 网络模式切换对话框 - 暂时保留但不显示 */}
         <Root open={networkModeDialogOpen} onOpenChange={setNetworkModeDialogOpen}>
           <Portal>
             <Overlay className={`fixed inset-0 bg-black/30 ${overlayShow}`} />
-            <Content 
+            <Content
               className={`fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] 
                 w-[90vw] max-w-[450px] rounded-lg bg-white p-6 shadow-xl focus:outline-none
                 ${contentShow}`}
             >
-              <Title className="text-xl font-semibold mb-4">
-                切换网络模式
-              </Title>
+              <Title className="text-xl font-semibold mb-4">切换网络模式</Title>
               <Description className="text-gray-500 mb-4">
                 当前模式: {isLocalNetwork ? '局域网' : '互联网'}
               </Description>
               <div className="mb-6">
                 <p className="text-sm text-gray-600 mb-2">
-                  <strong>局域网模式:</strong> 适用于同一网络下的设备通信，速度更快，但仅限于局域网内使用。
+                  <strong>局域网模式:</strong>{' '}
+                  适用于同一网络下的设备通信，速度更快，但仅限于局域网内使用。
                 </p>
                 <p className="text-sm text-gray-600">
-                  <strong>互联网模式:</strong> 适用于不同网络下的设备通信，可以跨网络使用，但速度可能较慢。
+                  <strong>互联网模式:</strong>{' '}
+                  适用于不同网络下的设备通信，可以跨网络使用，但速度可能较慢。
                 </p>
               </div>
               <div className="flex justify-end space-x-2">
@@ -532,9 +562,17 @@ const ChatPanel: React.FC = () => {
       {errorMessage && (
         <div className="p-3 bg-red-50 border-b border-red-200 text-red-600 text-sm">
           <div className="flex items-center">
-            <svg className="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+            <svg
+              className="w-5 h-5 mr-2 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
             <div>
@@ -549,20 +587,35 @@ const ChatPanel: React.FC = () => {
           </div>
         </div>
       )}
-      
+
       {/* 显示连接状态 */}
       {isConnecting && (
         <div className="p-3 bg-blue-50 border-b border-blue-200 text-blue-600 text-sm">
           <div className="flex items-center">
-            <svg className="w-5 h-5 mr-2 animate-spin flex-shrink-0" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            <svg
+              className="w-5 h-5 mr-2 animate-spin flex-shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
             </svg>
             <span>正在连接中，请稍候...</span>
           </div>
         </div>
       )}
-      
+
       {/* 暂时隐藏网络模式显示 */}
       {/* {(currentChat as GroupChat).isLocalNetwork !== undefined && (
         <div className={`p-2 text-xs text-center ${(currentChat as GroupChat).isLocalNetwork ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'}`}>
@@ -575,7 +628,7 @@ const ChatPanel: React.FC = () => {
           </button>
         </div>
       )} */}
-      
+
       {isGroupChat ? (
         // 群聊界面
         <>
@@ -606,12 +659,12 @@ const ChatPanel: React.FC = () => {
           <ChatInput />
         </>
       )}
-      
+
       {/* 用户名输入对话框 - 在聊天界面中也可能需要 */}
       <Root open={nameDialogOpen} onOpenChange={setNameDialogOpen}>
         <Portal>
           <Overlay className={`fixed inset-0 bg-black/30 ${overlayShow}`} />
-          <Content 
+          <Content
             className={`fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] 
               w-[90vw] max-w-[450px] rounded-lg bg-white p-6 shadow-xl focus:outline-none
               ${contentShow}`}
@@ -632,9 +685,7 @@ const ChatPanel: React.FC = () => {
               {userName ? '修改用户名' : '设置您的用户名'}
             </Title>
             <Description className="text-gray-500 mb-4">
-              {userName 
-                ? '请输入您的新用户名：' 
-                : '在开始使用前，请先设置您的用户名：'}
+              {userName ? '请输入您的新用户名：' : '在开始使用前，请先设置您的用户名：'}
             </Description>
             <input
               type="text"
@@ -663,28 +714,28 @@ const ChatPanel: React.FC = () => {
           </Content>
         </Portal>
       </Root>
-      
+
       {/* 网络模式切换对话框 - 暂时保留但不显示 */}
       <Root open={networkModeDialogOpen} onOpenChange={setNetworkModeDialogOpen}>
         <Portal>
           <Overlay className={`fixed inset-0 bg-black/30 ${overlayShow}`} />
-          <Content 
+          <Content
             className={`fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] 
               w-[90vw] max-w-[450px] rounded-lg bg-white p-6 shadow-xl focus:outline-none
               ${contentShow}`}
           >
-            <Title className="text-xl font-semibold mb-4">
-              切换网络模式
-            </Title>
+            <Title className="text-xl font-semibold mb-4">切换网络模式</Title>
             <Description className="text-gray-500 mb-4">
               当前模式: {isLocalNetwork ? '局域网' : '互联网'}
             </Description>
             <div className="mb-6">
               <p className="text-sm text-gray-600 mb-2">
-                <strong>局域网模式:</strong> 适用于同一网络下的设备通信，速度更快，但仅限于局域网内使用。
+                <strong>局域网模式:</strong>{' '}
+                适用于同一网络下的设备通信，速度更快，但仅限于局域网内使用。
               </p>
               <p className="text-sm text-gray-600">
-                <strong>互联网模式:</strong> 适用于不同网络下的设备通信，可以跨网络使用，但速度可能较慢。
+                <strong>互联网模式:</strong>{' '}
+                适用于不同网络下的设备通信，可以跨网络使用，但速度可能较慢。
               </p>
               <p className="text-sm text-red-500 mt-2">
                 <strong>注意:</strong> 切换网络模式会断开当前连接，需要重新加入群聊。
@@ -711,4 +762,4 @@ const ChatPanel: React.FC = () => {
   );
 };
 
-export default ChatPanel; 
+export default ChatPanel;
