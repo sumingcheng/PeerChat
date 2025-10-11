@@ -10,6 +10,9 @@ export default {
   ],
   theme: {
     extend: {
+      screens: {
+        xs: '475px'
+      },
       keyframes: {
         'accordion-down': {
           from: { height: '0' },
@@ -51,5 +54,6 @@ export default {
       }
     }
   },
+  // @eslint-disable-next-line
   plugins: [require('tailwindcss-animate')]
 };

@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
 import useChatStore from '@/store/useChatStore.ts';
+import React, { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
 const ChatInput: React.FC = () => {
@@ -61,8 +61,8 @@ const ChatInput: React.FC = () => {
   };
 
   return (
-    <form onSubmit={handleSendMessage} className="p-4 bg-white border-t border-gray-200">
-      <div className="flex items-center">
+    <form onSubmit={handleSendMessage} className="p-3 md:p-4 bg-white border-t border-gray-200">
+      <div className="flex items-center gap-2">
         <input
           ref={inputRef}
           type="text"
@@ -70,14 +70,14 @@ const ChatInput: React.FC = () => {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="flex-1 px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="flex-1 px-3 md:px-4 py-2 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
           disabled={isConnecting || isSending}
           autoFocus
         />
         <button
           type="submit"
           disabled={isConnecting || isSending || !message.trim()}
-          className={`px-4 py-2 bg-blue-500 text-white rounded-r-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 min-w-[80px] flex items-center justify-center
+          className={`px-3 md:px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 min-w-[70px] md:min-w-[80px] flex items-center justify-center text-sm md:text-base
             ${isConnecting || isSending || !message.trim() ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           {isSending ? (

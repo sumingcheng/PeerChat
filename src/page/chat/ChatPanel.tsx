@@ -1,5 +1,6 @@
-import { chatEvents } from '@/store/useChatStore.ts';
-import useChatStore from '@/store/useChatStore.ts';
+import useChatStore, { chatEvents } from '@/store/useChatStore.ts';
+import { GroupChat } from '@/types/chat.ts';
+import { cleanRoomId } from '@/utils/roomUtils.ts';
 import { Content, Description, Overlay, Portal, Root, Title } from '@radix-ui/react-dialog';
 import { Root as SeparatorRoot } from '@radix-ui/react-separator';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -8,8 +9,6 @@ import GroupChatHeader from '../group/GroupChatHeader.tsx';
 import GroupUserList from '../group/GroupUserList.tsx';
 import ChatInput from '../input/ChatInput.tsx';
 import MessageList from './MessageList.tsx';
-import { GroupChat } from '@/types/chat.ts';
-import { cleanRoomId } from '@/utils/roomUtils.ts';
 
 // 动画常量
 const overlayShow = 'animate-[overlay-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
@@ -408,7 +407,7 @@ const ChatPanel: React.FC = () => {
                 value={tempUserName}
                 onChange={(e) => setTempUserName(e.target.value)}
                 placeholder="请输入您的用户名"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
                 autoFocus
               />
               <div className="flex justify-end space-x-2">
@@ -449,7 +448,7 @@ const ChatPanel: React.FC = () => {
                   onChange={(e) => setRoomIdInput(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="输入群聊ID或粘贴邀请链接"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
                   autoFocus
                   disabled={isJoining}
                 />
@@ -634,7 +633,8 @@ const ChatPanel: React.FC = () => {
         <>
           <GroupChatHeader />
           <div className="flex flex-1 overflow-hidden">
-            <div className="w-64 bg-gray-50 border-r border-gray-200 overflow-y-auto">
+            {/* 桌面端用户列表 */}
+            <div className="hidden md:block w-64 bg-gray-50 border-r border-gray-200 overflow-y-auto">
               <GroupUserList />
             </div>
             <div className="flex-1 flex flex-col">
@@ -666,7 +666,7 @@ const ChatPanel: React.FC = () => {
           <Overlay className={`fixed inset-0 bg-black/30 ${overlayShow}`} />
           <Content
             className={`fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] 
-              w-[90vw] max-w-[450px] rounded-lg bg-white p-6 shadow-xl focus:outline-none
+              w-[95vw] max-w-[450px] rounded-lg bg-white p-4 md:p-6 shadow-xl focus:outline-none
               ${contentShow}`}
             onEscapeKeyDown={(e) => {
               // 如果是首次设置用户名（没有用户名），阻止关闭
@@ -692,7 +692,7 @@ const ChatPanel: React.FC = () => {
               value={tempUserName}
               onChange={(e) => setTempUserName(e.target.value)}
               placeholder="请输入您的用户名"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
               autoFocus
             />
             <div className="flex justify-end space-x-2">
@@ -721,7 +721,7 @@ const ChatPanel: React.FC = () => {
           <Overlay className={`fixed inset-0 bg-black/30 ${overlayShow}`} />
           <Content
             className={`fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] 
-              w-[90vw] max-w-[450px] rounded-lg bg-white p-6 shadow-xl focus:outline-none
+              w-[95vw] max-w-[450px] rounded-lg bg-white p-4 md:p-6 shadow-xl focus:outline-none
               ${contentShow}`}
           >
             <Title className="text-xl font-semibold mb-4">切换网络模式</Title>
