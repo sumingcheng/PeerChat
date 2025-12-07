@@ -39,19 +39,25 @@ export function useChatEvents(
   }, [handlers, ...deps]);
 
   useEffect(() => {
-    const stableHandlers = new Map<keyof ChatEventMap, Function>();
+    const stableHandlers = new Map<string, (data: unknown) => void>();
 
     (Object.keys(handlers) as Array<keyof ChatEventMap>).forEach((event) => {
-      const stableHandler = (data: any) => {
-        handlersRef.current[event]?.(data);
+      const stableHandler = (data: unknown) => {
+        const handler = handlersRef.current[event];
+        if (handler) {
+          (handler as (data: unknown) => void)(data);
+        }
       };
       stableHandlers.set(event, stableHandler);
-      chatEvents.on(event, stableHandler as any);
+      chatEvents.on(event, stableHandler as (data: ChatEventMap[typeof event]) => void);
     });
 
     return () => {
       stableHandlers.forEach((handler, event) => {
-        chatEvents.off(event, handler as any);
+        chatEvents.off(
+          event as keyof ChatEventMap & string,
+          handler as (data: ChatEventMap[keyof ChatEventMap]) => void
+        );
       });
     };
   }, []);

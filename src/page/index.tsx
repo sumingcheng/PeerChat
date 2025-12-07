@@ -1,18 +1,15 @@
+import ChatPanel from '@/page/chat/ChatPanel.tsx';
+import ChatLayout from '@/page/layout/ChatLayout.tsx';
 import useChatStore from '@/store/useChatStore.ts';
 import { GroupChat } from '@/types/chat.ts';
 import { cleanRoomId } from '@/utils/roomUtils.ts';
 import { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
-import ChatPanel from '@/page/chat/ChatPanel.tsx';
-import ChatLayout from '@/page/layout/ChatLayout.tsx';
 
 const ChatPage = () => {
   const isConnecting = useChatStore((state) => state.isConnecting);
-  const joinGroupChat = useChatStore((state) => state.joinGroupChat);
-  const userName = useChatStore((state) => state.userName);
   const chats = useChatStore((state) => state.chats);
   const setPendingRoomId = useChatStore((state) => state.setPendingRoomId);
-  const isPeerInitialized = useChatStore((state) => state.isPeerInitialized);
 
   // 检查URL中是否包含roomId参数
   useEffect(() => {

@@ -19,7 +19,7 @@ export interface ConnectionInfo {
   metadata?: unknown;
 }
 
-export type ConnectionEventMap = {
+export interface ConnectionEventMap {
   'connection:added': { peerId: string; connectionInfo: ConnectionInfo };
   'connection:opened': { peerId: string };
   'connection:data': { peerId: string; data: unknown };
@@ -27,8 +27,7 @@ export type ConnectionEventMap = {
   'connection:error': { peerId: string; error: Error };
   'connection:state_changed': { peerId: string; state: ConnectionState };
   'connection:removed': { peerId: string };
-  [key: string]: unknown;
-};
+}
 
 export class ConnectionManager extends BaseEventEmitter<ConnectionEventMap> {
   private connections = new Map<string, ConnectionInfo>();

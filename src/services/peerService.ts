@@ -443,7 +443,7 @@ export class PeerService {
   }
 
   // 处理用户加入广播
-  handleUserJoinedData(data: User, peerId: string) {
+  handleUserJoinedData(data: User, _peerId: string) {
     const { currentChat } = this.get();
 
     if (currentChat && currentChat.isGroup) {
@@ -482,7 +482,7 @@ export class PeerService {
   }
 
   // 处理房间状态
-  handleRoomStateData(data: { users: User[]; messages: Message[] }, peerId: string) {
+  handleRoomStateData(data: { users: User[]; messages: Message[] }, _peerId: string) {
     const { currentChat } = this.get();
 
     if (currentChat && currentChat.isGroup) {
@@ -536,7 +536,7 @@ export class PeerService {
   }
 
   // 处理用户离开数据
-  handleUserLeftData(data: { id: string }, peerId: string) {
+  handleUserLeftData(data: { id: string }, _peerId: string) {
     this.handleUserLeft(data.id);
   }
 

@@ -1,53 +1,50 @@
 import { GroupChat } from '@/types/chat';
 
-export class BaseEventEmitter<
-  TEventMap extends { [key: string]: unknown } = { [key: string]: unknown }
-> {
+export class BaseEventEmitter<TEventMap> {
   private events: Map<string, Set<Function>> = new Map();
 
-  on<K extends keyof TEventMap>(event: K, callback: (data: TEventMap[K]) => void): this {
-    const key = event as string;
-    if (!this.events.has(key)) {
-      this.events.set(key, new Set());
+  on<K extends keyof TEventMap & string>(event: K, callback: (data: TEventMap[K]) => void): this {
+    if (!this.events.has(event)) {
+      this.events.set(event, new Set());
     }
-    this.events.get(key)!.add(callback);
+    this.events.get(event)!.add(callback);
     return this;
   }
 
-  off<K extends keyof TEventMap>(event: K, callback: (data: TEventMap[K]) => void): this {
-    const callbacks = this.events.get(event as string);
+  off<K extends keyof TEventMap & string>(event: K, callback: (data: TEventMap[K]) => void): this {
+    const callbacks = this.events.get(event);
     if (callbacks) {
       callbacks.delete(callback);
     }
     return this;
   }
 
-  emit<K extends keyof TEventMap>(
+  emit<K extends keyof TEventMap & string>(
     event: K,
     ...args: TEventMap[K] extends void ? [] : [TEventMap[K]]
   ): this {
-    const callbacks = this.events.get(event as string);
+    const callbacks = this.events.get(event);
     if (callbacks) {
       callbacks.forEach((callback) => callback(args[0]));
     }
     return this;
   }
 
-  removeAllListeners(event?: keyof TEventMap): this {
+  removeAllListeners<K extends keyof TEventMap & string>(event?: K): this {
     if (event) {
-      this.events.delete(event as string);
+      this.events.delete(event);
     } else {
       this.events.clear();
     }
     return this;
   }
 
-  listenerCount(event: keyof TEventMap): number {
-    return this.events.get(event as string)?.size ?? 0;
+  listenerCount<K extends keyof TEventMap & string>(event: K): number {
+    return this.events.get(event)?.size ?? 0;
   }
 }
 
-export type ChatEventMap = {
+export interface ChatEventMap {
   error: string;
   groupCreated: { isLocalNetwork?: boolean; groupId: string };
   joinedGroup: GroupChat;
@@ -56,7 +53,6 @@ export type ChatEventMap = {
   peerInitialized: { id: string; isLocalNetwork?: boolean };
   networkModeChanged: { isLocalNetwork: boolean };
   linkCopied: void;
-  [key: string]: unknown;
-};
+}
 
 export class EventEmitter extends BaseEventEmitter<ChatEventMap> {}
