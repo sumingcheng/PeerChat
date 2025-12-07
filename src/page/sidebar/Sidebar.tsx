@@ -1,6 +1,7 @@
-import useChatStore, { chatEvents } from '@/store/useChatStore.ts';
-import { Chat, GroupChat } from '@/types/chat.ts';
-import { cleanRoomId } from '@/utils/roomUtils.ts';
+import { useChatEvents } from '@/hooks/useChatEvents';
+import useChatStore from '@/store/useChatStore';
+import { Chat, GroupChat } from '@/types/chat';
+import { cleanRoomId } from '@/utils/roomUtils';
 import { Content, Description, Overlay, Portal, Root, Title } from '@radix-ui/react-dialog';
 import {
   Content as TooltipContent,
@@ -10,7 +11,7 @@ import {
 } from '@radix-ui/react-tooltip';
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import ChatListItem from './ChatListItem.tsx';
+import ChatListItem from './ChatListItem';
 
 // 动画常量
 const overlayShow = 'animate-[overlay-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
@@ -39,27 +40,16 @@ const Sidebar: React.FC = () => {
     }
   }, [userName]);
 
-  // 监听事件
-  useEffect(() => {
-    const handleJoinedGroup = () => {
+  useChatEvents({
+    joinedGroup: () => {
       setJoinDialogOpen(false);
       setRoomIdInput('');
       setIsJoining(false);
-    };
-
-    const handleError = () => {
+    },
+    error: () => {
       setIsJoining(false);
-    };
-
-    // 使用新的 EventEmitter 类的方法
-    chatEvents.on('joinedGroup', handleJoinedGroup);
-    chatEvents.on('error', handleError);
-
-    return () => {
-      chatEvents.off('joinedGroup', handleJoinedGroup);
-      chatEvents.off('error', handleError);
-    };
-  }, []);
+    }
+  });
 
   const handleCreateGroupChat = () => {
     if (!userName) {

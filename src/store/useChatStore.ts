@@ -3,35 +3,50 @@ import { GroupChatService } from '@/services/groupChatService';
 import { MessageService } from '@/services/messageService';
 import { PeerService } from '@/services/peerService';
 import { GroupChat } from '@/types/chat';
-import { ChatState } from '@/types/store';
+import { ChatState, GetStateFunction, SetStateFunction } from '@/types/store';
 import { EventEmitter } from '@/utils/eventEmitter';
 import { create } from 'zustand';
 
-// 事件总线，用于跨组件通信
 export const chatEvents = new EventEmitter();
 
-// 创建 Zustand store
-const useChatStore = create<ChatState>((set, get) => {
-  // 初始化服务
-  const connectionManager = new ConnectionManager();
-  const peerService = new PeerService(set, get, chatEvents, connectionManager);
-  const messageService = new MessageService(set, get, connectionManager);
-  const groupChatService = new GroupChatService(
-    set,
-    get,
-    chatEvents,
-    peerService,
-    messageService,
-    connectionManager
-  );
+interface Services {
+  connectionManager: ConnectionManager;
+  peerService: PeerService;
+  messageService: MessageService;
+  groupChatService: GroupChatService;
+}
 
-  // 监听网络模式切换请求
-  chatEvents.on('requestToggleNetworkMode', () => {
-    get().toggleNetworkMode();
-  });
+let services: Services | null = null;
+let isInitialized = false;
+
+function getServices(set: SetStateFunction<ChatState>, get: GetStateFunction<ChatState>): Services {
+  if (!services) {
+    const connectionManager = new ConnectionManager();
+    const peerService = new PeerService(set, get, chatEvents, connectionManager);
+    const messageService = new MessageService(set, get, connectionManager);
+    const groupChatService = new GroupChatService(
+      set,
+      get,
+      chatEvents,
+      peerService,
+      messageService,
+      connectionManager
+    );
+
+    services = {
+      connectionManager,
+      peerService,
+      messageService,
+      groupChatService
+    };
+  }
+  return services;
+}
+
+const useChatStore = create<ChatState>((set, get) => {
+  const lazyServices = () => getServices(set, get);
 
   return {
-    // 初始状态
     currentChat: null,
     chats: [],
     messages: [],
@@ -40,29 +55,24 @@ const useChatStore = create<ChatState>((set, get) => {
     userId: '',
     userName: null,
     peer: null,
-    connectionManager: connectionManager,
+    connectionManager: null as unknown as ConnectionManager,
     isPeerInitialized: false,
     pendingRoomId: null,
-    isLocalNetwork: true, // 默认使用局域网模式
+    isLocalNetwork: true,
     localIpAddress: null,
 
-    // 设置待加入的群聊ID
     setPendingRoomId: (roomId) => {
       set({ pendingRoomId: roomId });
     },
 
-    // 设置当前聊天
     setCurrentChat: (chat) => {
       set({ currentChat: chat });
 
-      // 如果切换了聊天，更新消息列表
       if (chat) {
-        // 如果是群聊，获取群聊的消息
         if (chat.isGroup) {
           const groupChat = chat as GroupChat;
           set({ messages: groupChat.messages || [] });
         } else {
-          // 普通聊天，暂时清空消息
           set({ messages: [] });
         }
       } else {
@@ -70,34 +80,31 @@ const useChatStore = create<ChatState>((set, get) => {
       }
     },
 
-    // 设置用户名
     setUserName: (name) => {
       set({ userName: name });
-      // 保存到本地存储
       localStorage.setItem('userName', name);
-      // 初始化 PeerJS
+      const { connectionManager, peerService } = lazyServices();
+      set({ connectionManager });
       peerService.initializePeer(name);
     },
 
-    // 创建群聊
     createGroupChat: () => {
-      groupChatService.createGroupChat();
+      lazyServices().groupChatService.createGroupChat();
     },
 
-    // 加入群聊
     joinGroupChat: (roomId) => {
-      groupChatService.joinGroupChat(roomId);
+      lazyServices().groupChatService.joinGroupChat(roomId);
     },
 
-    // 发送消息
     sendMessage: (content) => {
-      messageService.sendMessage(content);
+      lazyServices().messageService.sendMessage(content);
     },
 
-    // 复制分享链接
     copyShareLink: () => {
       const { currentChat } = get();
-      if (!currentChat || !currentChat.isGroup) return;
+      if (!currentChat || !currentChat.isGroup) {
+        return;
+      }
 
       const groupChat = currentChat as GroupChat;
       if (groupChat.shareLink) {
@@ -113,26 +120,30 @@ const useChatStore = create<ChatState>((set, get) => {
       }
     },
 
-    // 离开当前聊天
     leaveCurrentChat: () => {
-      groupChatService.leaveCurrentChat();
+      lazyServices().groupChatService.leaveCurrentChat();
     },
 
-    // 切换网络模式
     toggleNetworkMode: () => {
-      return groupChatService.toggleNetworkMode();
+      return lazyServices().groupChatService.toggleNetworkMode();
     }
   };
 });
 
-// 初始化 - 从本地存储加载用户名
-if (typeof window !== 'undefined') {
+function initializeFromStorage(): void {
+  if (isInitialized || typeof window === 'undefined') {
+    return;
+  }
+  isInitialized = true;
+
   const savedUserName = localStorage.getItem('userName');
   if (savedUserName) {
-    setTimeout(() => {
+    queueMicrotask(() => {
       useChatStore.getState().setUserName(savedUserName);
-    }, 0);
+    });
   }
 }
+
+initializeFromStorage();
 
 export default useChatStore;

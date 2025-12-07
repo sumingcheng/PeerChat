@@ -1,10 +1,19 @@
 import { Chat, GroupChat } from '@/types/chat';
+import { ChatState, GetStateFunction, SetStateFunction } from '@/types/store';
 import { EventEmitter } from '@/utils/eventEmitter';
 import { cleanRoomId } from '@/utils/roomUtils';
-import { ChatState, SetStateFunction, GetStateFunction } from '@/types/store';
+import { DataConnection } from 'peerjs';
 import { ConnectionManager } from './connectionManager';
 import { MessageService } from './messageService';
 import { PeerService } from './peerService';
+
+interface JoinGroupParams {
+  roomId: string;
+  peerId: string;
+  userName: string;
+  isLocalNetwork: boolean;
+  localIpAddress?: string;
+}
 
 export class GroupChatService {
   private keepAliveInterval: number | null = null;
@@ -17,6 +26,56 @@ export class GroupChatService {
     private messageService: MessageService,
     private connectionManager: ConnectionManager
   ) {}
+
+  private createJoinedGroupChat(params: JoinGroupParams): GroupChat {
+    const { roomId, peerId, userName, isLocalNetwork, localIpAddress } = params;
+    return {
+      id: roomId,
+      name: `群聊 ${roomId.substring(0, 6)}`,
+      isGroup: true,
+      users: [
+        { id: peerId, name: userName },
+        { id: roomId, name: '等待房主信息...' }
+      ],
+      messages: [],
+      roomId: roomId,
+      isHost: false,
+      shareLink: `${window.location.origin}${window.location.pathname}?roomId=${roomId}`,
+      isLocalNetwork,
+      localIpAddress
+    };
+  }
+
+  private updateChatsWithGroup(groupChat: GroupChat): void {
+    const { chats } = this.get();
+    const existingIndex = chats.findIndex((c: Chat) => c.id === groupChat.id);
+
+    if (existingIndex >= 0) {
+      const newChats = [...chats];
+      newChats[existingIndex] = groupChat;
+      this.set({ chats: newChats, currentChat: groupChat });
+    } else {
+      this.set({ chats: [groupChat, ...chats], currentChat: groupChat });
+    }
+  }
+
+  private finishJoinGroup(
+    conn: DataConnection,
+    groupChat: GroupChat,
+    params: JoinGroupParams
+  ): void {
+    const { peerId, userName, isLocalNetwork, localIpAddress } = params;
+
+    conn.send({
+      type: 'NEW_USER',
+      data: { id: peerId, name: userName, isLocalNetwork, localIpAddress }
+    });
+
+    this.chatEvents.emit('joinedGroup', groupChat);
+    this.set({ isConnecting: false });
+    this.messageService.addSystemMessage('您已加入群聊');
+    this.setupKeepAliveTimer();
+  }
 
   // 创建群聊
   createGroupChat() {
@@ -137,8 +196,7 @@ export class GroupChatService {
       if (existingChat) {
         console.log('已经加入过该群聊，直接切换');
         this.set({ currentChat: existingChat, isConnecting: false });
-        // 发送事件通知已切换到现有群聊
-        this.chatEvents.emit('joinedGroup', existingChat);
+        this.chatEvents.emit('joinedGroup', existingChat as GroupChat);
         return;
       }
 
@@ -203,63 +261,21 @@ export class GroupChatService {
         clearTimeout(connectionTimeout);
         console.log('已连接到房主，连接已打开');
 
-        // 将连接注册到连接管理器
         this.connectionManager.addConnection(cleanedRoomId, conn);
 
-        // 创建新的群聊对象
-        const newGroupChat: GroupChat = {
-          id: cleanedRoomId,
-          name: `群聊 ${cleanedRoomId.substring(0, 6)}`,
-          isGroup: true,
-          users: [
-            { id: peer.id, name: userName },
-            { id: cleanedRoomId, name: '等待房主信息...' }
-          ],
-          messages: [],
+        const joinParams: JoinGroupParams = {
           roomId: cleanedRoomId,
-          isHost: false,
-          shareLink: `${window.location.origin}${window.location.pathname}?roomId=${cleanedRoomId}`,
-          isLocalNetwork: isLocalNetwork,
+          peerId: peer.id,
+          userName,
+          isLocalNetwork,
           localIpAddress: connectionInfo.localIpAddress || undefined
         };
 
+        const newGroupChat = this.createJoinedGroupChat(joinParams);
         console.log('创建新的群聊对象:', newGroupChat);
 
-        // 更新聊天列表和当前聊天
-        const { chats } = this.get();
-        const existingChatIndex = chats.findIndex((c: Chat) => c.id === cleanedRoomId);
-
-        if (existingChatIndex >= 0) {
-          // 如果存在，替换它
-          const newChats = [...chats];
-          newChats[existingChatIndex] = newGroupChat;
-          this.set({ chats: newChats, currentChat: newGroupChat });
-        } else {
-          // 否则添加新的
-          this.set({ chats: [newGroupChat, ...chats], currentChat: newGroupChat });
-        }
-
-        console.log('向房主发送自己的信息');
-        // 向房主发送自己的信息，包含网络环境信息
-        conn.send({
-          type: 'NEW_USER',
-          data: {
-            id: peer.id,
-            name: userName,
-            isLocalNetwork: isLocalNetwork,
-            localIpAddress: connectionInfo.localIpAddress || undefined
-          }
-        });
-
-        // 发送加入消息
-        this.chatEvents.emit('joinedGroup', newGroupChat);
-        this.set({ isConnecting: false });
-
-        // 添加系统消息
-        this.messageService.addSystemMessage('您已加入群聊');
-
-        // 设置保持连接活跃的定时器
-        this.setupKeepAliveTimer();
+        this.updateChatsWithGroup(newGroupChat);
+        this.finishJoinGroup(conn, newGroupChat, joinParams);
       });
     } catch (error: any) {
       console.error('加入群聊错误:', error);
@@ -432,74 +448,31 @@ export class GroupChatService {
     });
   }
 
-  // 处理成功连接
   private handleSuccessfulConnection(
-    conn: any,
+    conn: DataConnection,
     roomId: string,
     userName: string,
     isLocalNetwork: boolean
-  ) {
-    const connectionInfo = this.peerService.getConnectionInfo();
+  ): void {
     const { peer } = this.get();
-
     if (!peer) {
       console.error('Peer 不存在，无法处理连接');
       return;
     }
 
-    // 确保连接已注册到连接管理器
-    this.connectionManager.addConnection(roomId, conn);
-
-    // 创建新的群聊对象
-    const newGroupChat: GroupChat = {
-      id: roomId,
-      name: `群聊 ${roomId.substring(0, 6)}`,
-      isGroup: true,
-      users: [
-        { id: peer.id, name: userName },
-        { id: roomId, name: '等待房主信息...' }
-      ],
-      messages: [],
-      roomId: roomId,
-      isHost: false,
-      shareLink: `${window.location.origin}${window.location.pathname}?roomId=${roomId}`,
-      isLocalNetwork: isLocalNetwork,
+    const connectionInfo = this.peerService.getConnectionInfo();
+    const joinParams: JoinGroupParams = {
+      roomId,
+      peerId: peer.id,
+      userName,
+      isLocalNetwork,
       localIpAddress: connectionInfo.localIpAddress || undefined
     };
 
+    const newGroupChat = this.createJoinedGroupChat(joinParams);
     console.log('创建新的群聊对象:', newGroupChat);
 
-    // 更新聊天列表和当前聊天
-    const { chats } = this.get();
-    const existingChatIndex = chats.findIndex((c: Chat) => c.id === roomId);
-
-    if (existingChatIndex >= 0) {
-      // 如果存在，替换它
-      const newChats = [...chats];
-      newChats[existingChatIndex] = newGroupChat;
-      this.set({ chats: newChats, currentChat: newGroupChat });
-    } else {
-      // 否则添加新的
-      this.set({ chats: [newGroupChat, ...chats], currentChat: newGroupChat });
-    }
-
-    console.log('向房主发送自己的信息');
-    // 向房主发送自己的信息，包含网络环境信息
-    conn.send({
-      type: 'NEW_USER',
-      data: {
-        id: peer.id,
-        name: userName,
-        isLocalNetwork: isLocalNetwork,
-        localIpAddress: connectionInfo.localIpAddress || undefined
-      }
-    });
-
-    // 发送加入消息
-    this.chatEvents.emit('joinedGroup', newGroupChat);
-    this.set({ isConnecting: false });
-
-    // 添加系统消息
-    this.messageService.addSystemMessage('您已加入群聊');
+    this.updateChatsWithGroup(newGroupChat);
+    this.finishJoinGroup(conn, newGroupChat, joinParams);
   }
 }

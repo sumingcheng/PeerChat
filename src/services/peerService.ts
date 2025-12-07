@@ -1,13 +1,18 @@
-import Peer from 'peerjs';
-import { nanoid } from 'nanoid';
-import { EventEmitter } from '@/utils/eventEmitter';
 import { Chat, GroupChat, Message, User } from '@/types/chat';
-import { ChatState, SetStateFunction, GetStateFunction, PeerMessage } from '@/types/store';
-import { ConnectionManager } from './connectionManager';
+import { ChatState, GetStateFunction, PeerMessage, SetStateFunction } from '@/types/store';
+import { EventEmitter } from '@/utils/eventEmitter';
 import { cleanRoomId } from '@/utils/roomUtils';
+import { nanoid } from 'nanoid';
+import Peer from 'peerjs';
+import { ConnectionManager } from './connectionManager';
 
 export class PeerService {
   private isLocalNetwork: boolean = false;
+  private boundHandlers: {
+    onData: (data: { peerId: string; data: unknown }) => void;
+    onClosed: (data: { peerId: string }) => void;
+    onError: (data: { peerId: string; error: Error }) => void;
+  };
 
   constructor(
     private set: SetStateFunction<ChatState>,
@@ -15,42 +20,49 @@ export class PeerService {
     private chatEvents: EventEmitter,
     private connectionManager: ConnectionManager
   ) {
-    // 检测是否在局域网环境
-    this.detectLocalNetwork();
+    this.boundHandlers = {
+      onData: this.handleConnectionData.bind(this),
+      onClosed: this.handleConnectionClosed.bind(this),
+      onError: this.handleConnectionError.bind(this)
+    };
 
-    // 设置连接管理器的全局事件监听器（只设置一次）
+    this.detectLocalNetwork();
     this.setupConnectionManagerListeners();
   }
 
-  // 设置连接管理器的全局事件监听器
-  private setupConnectionManagerListeners() {
-    // 监听连接数据事件
-    this.connectionManager.on('connection:data', ({ peerId, data }: any) => {
-      console.log(`收到来自 ${peerId} 的数据:`, data);
-      this.handleReceivedData(data, peerId);
-    });
+  private handleConnectionData({ peerId, data }: { peerId: string; data: unknown }): void {
+    console.log(`收到来自 ${peerId} 的数据:`, data);
+    this.handleReceivedData(data as PeerMessage, peerId);
+  }
 
-    // 监听连接关闭事件
-    this.connectionManager.on('connection:closed', ({ peerId }: any) => {
-      console.log('连接已关闭:', peerId);
+  private handleConnectionClosed({ peerId }: { peerId: string }): void {
+    console.log('连接已关闭:', peerId);
 
-      // 检查是否是与房主的连接断开
-      const { currentChat } = this.get();
-      if (currentChat?.isGroup) {
-        const groupChat = currentChat as GroupChat;
-        if (peerId === groupChat.roomId && !groupChat.isHost) {
-          // 与房主的连接断开，发送系统消息
-          this.chatEvents.emit('error', '与群聊的连接已断开');
-        }
+    const { currentChat } = this.get();
+    if (currentChat?.isGroup) {
+      const groupChat = currentChat as GroupChat;
+      if (peerId === groupChat.roomId && !groupChat.isHost) {
+        this.chatEvents.emit('error', '与群聊的连接已断开');
       }
+    }
 
-      this.handleUserLeft(peerId);
-    });
+    this.handleUserLeft(peerId);
+  }
 
-    // 监听连接错误事件
-    this.connectionManager.on('connection:error', ({ peerId, error }: any) => {
-      console.error(`与 ${peerId} 的连接发生错误:`, error);
-    });
+  private handleConnectionError({ peerId, error }: { peerId: string; error: Error }): void {
+    console.error(`与 ${peerId} 的连接发生错误:`, error);
+  }
+
+  private setupConnectionManagerListeners(): void {
+    this.connectionManager.on('connection:data', this.boundHandlers.onData);
+    this.connectionManager.on('connection:closed', this.boundHandlers.onClosed);
+    this.connectionManager.on('connection:error', this.boundHandlers.onError);
+  }
+
+  destroy(): void {
+    this.connectionManager.off('connection:data', this.boundHandlers.onData);
+    this.connectionManager.off('connection:closed', this.boundHandlers.onClosed);
+    this.connectionManager.off('connection:error', this.boundHandlers.onError);
   }
 
   // 检测是否在局域网环境

@@ -1,5 +1,6 @@
-import useChatStore, { chatEvents } from '@/store/useChatStore.ts';
-import { GroupChat } from '@/types/chat.ts';
+import { useChatEvent } from '@/hooks/useChatEvents';
+import useChatStore from '@/store/useChatStore';
+import { GroupChat } from '@/types/chat';
 import {
   Action as AlertDialogAction,
   Cancel as AlertDialogCancel,
@@ -11,10 +12,10 @@ import {
   Title as AlertDialogTitle,
   Trigger as AlertDialogTrigger
 } from '@radix-ui/react-alert-dialog';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
-import Avatar from '../common/Avatar.tsx';
-import GroupUserList from './GroupUserList.tsx';
+import Avatar from '../common/Avatar';
+import GroupUserList from './GroupUserList';
 
 // 动画常量
 const overlayShow = 'animate-[overlay-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
@@ -31,7 +32,8 @@ const GroupChatHeader: React.FC = () => {
   const [isUserListOpen, setIsUserListOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  // 检测屏幕尺寸
+  const copyTimeoutRef = useRef<number | null>(null);
+
   useEffect(() => {
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -40,21 +42,22 @@ const GroupChatHeader: React.FC = () => {
     checkScreenSize();
     window.addEventListener('resize', checkScreenSize);
 
-    return () => window.removeEventListener('resize', checkScreenSize);
-  }, []);
-
-  useEffect(() => {
-    const handleLinkCopied = () => {
-      setIsCopying(false);
-      toast.success('邀请链接已复制');
-    };
-
-    chatEvents.on('linkCopied', handleLinkCopied);
-
     return () => {
-      chatEvents.off('linkCopied', handleLinkCopied);
+      window.removeEventListener('resize', checkScreenSize);
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
     };
   }, []);
+
+  useChatEvent('linkCopied', () => {
+    if (copyTimeoutRef.current) {
+      clearTimeout(copyTimeoutRef.current);
+      copyTimeoutRef.current = null;
+    }
+    setIsCopying(false);
+    toast.success('邀请链接已复制');
+  });
 
   if (!currentChat || !currentChat.isGroup) return null;
 

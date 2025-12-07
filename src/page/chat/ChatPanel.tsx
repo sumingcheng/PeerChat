@@ -1,14 +1,15 @@
-import useChatStore, { chatEvents } from '@/store/useChatStore.ts';
-import { GroupChat } from '@/types/chat.ts';
-import { cleanRoomId } from '@/utils/roomUtils.ts';
+import { useChatEvents } from '@/hooks/useChatEvents';
+import useChatStore from '@/store/useChatStore';
+import { GroupChat } from '@/types/chat';
+import { cleanRoomId } from '@/utils/roomUtils';
 import { Content, Description, Overlay, Portal, Root, Title } from '@radix-ui/react-dialog';
 import { Root as SeparatorRoot } from '@radix-ui/react-separator';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
-import GroupChatHeader from '../group/GroupChatHeader.tsx';
-import GroupUserList from '../group/GroupUserList.tsx';
-import ChatInput from '../input/ChatInput.tsx';
-import MessageList from './MessageList.tsx';
+import GroupChatHeader from '../group/GroupChatHeader';
+import GroupUserList from '../group/GroupUserList';
+import ChatInput from '../input/ChatInput';
+import MessageList from './MessageList';
 
 // 动画常量
 const overlayShow = 'animate-[overlay-show_150ms_cubic-bezier(0.16,1,0.3,1)]';
@@ -25,6 +26,7 @@ const ChatPanel: React.FC = () => {
   const isPeerInitialized = useChatStore((state) => state.isPeerInitialized);
   const chats = useChatStore((state) => state.chats);
   const setCurrentChat = useChatStore((state) => state.setCurrentChat);
+  const toggleNetworkMode = useChatStore((state) => state.toggleNetworkMode);
 
   const [nameDialogOpen, setNameDialogOpen] = useState(false);
   const [tempUserName, setTempUserName] = useState('');
@@ -34,6 +36,8 @@ const ChatPanel: React.FC = () => {
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
   const [roomIdInput, setRoomIdInput] = useState('');
   const [isJoining, setIsJoining] = useState(false);
+
+  const errorTimeoutRef = useRef<number | null>(null);
 
   // 首次加载时检查是否已设置用户名
   useEffect(() => {
@@ -59,19 +63,21 @@ const ChatPanel: React.FC = () => {
     }
   }, [userName, pendingRoomId, joinGroupChat, isPeerInitialized]);
 
-  // 监听事件
   useEffect(() => {
-    const handleError = (message: string) => {
-      setErrorMessage(message);
+    return () => {
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current);
+      }
+    };
+  }, []);
 
-      // 重置加入群聊的状态
+  useChatEvents({
+    error: (message) => {
+      setErrorMessage(message);
       setIsJoining(false);
 
-      // 检查是否是连接错误
       if (message.includes('Could not connect to peer')) {
-        // 提取对等节点ID
         const peerId = message.match(/Could not connect to peer (\w+)/)?.[1];
-
         toast.error(
           <div>
             <div>连接失败: 无法连接到对等节点</div>
@@ -80,27 +86,26 @@ const ChatPanel: React.FC = () => {
           </div>,
           { duration: 5000 }
         );
-
-        // 清除连接中状态
         toast.dismiss('connecting');
       } else {
         toast.error(message);
       }
 
-      // 5秒后清除错误消息
-      setTimeout(() => {
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current);
+      }
+      errorTimeoutRef.current = window.setTimeout(() => {
         setErrorMessage(null);
+        errorTimeoutRef.current = null;
       }, 5000);
-    };
+    },
 
-    const handleGroupCreated = (_data?: { isLocalNetwork?: boolean }) => {
+    groupCreated: () => {
       toast.success('群聊创建成功');
-    };
+    },
 
-    const handleJoinedGroup = (groupChat?: GroupChat) => {
-      toast.dismiss('connecting'); // 清除连接中的提示
-
-      // 重置加入群聊的状态
+    joinedGroup: (groupChat) => {
+      toast.dismiss('connecting');
       setJoinDialogOpen(false);
       setRoomIdInput('');
       setIsJoining(false);
@@ -115,17 +120,17 @@ const ChatPanel: React.FC = () => {
       } else {
         toast.success('成功加入群聊');
       }
-    };
+    },
 
-    const handleLeftGroup = () => {
+    leftGroup: () => {
       toast('已离开群聊', { icon: '🔔' });
-    };
+    },
 
-    const handleConnecting = (peerId: string) => {
+    connecting: (peerId) => {
       toast.loading(`正在连接到节点 ${peerId}...`, { id: 'connecting' });
-    };
+    },
 
-    const handlePeerInitialized = (data: { id: string; isLocalNetwork?: boolean }) => {
+    peerInitialized: (data) => {
       toast.success(
         <div className="w-30">
           <div>连接成功！</div>
@@ -133,33 +138,13 @@ const ChatPanel: React.FC = () => {
         </div>,
         { duration: 3000 }
       );
-    };
+    },
 
-    const handleNetworkModeChanged = (data: { isLocalNetwork: boolean }) => {
+    networkModeChanged: (data) => {
       const mode = data.isLocalNetwork ? '局域网' : '互联网';
       toast.success(`已切换到${mode}模式`);
-    };
-
-    // 使用新的 EventEmitter 类的方法
-    chatEvents.on('error', handleError);
-    chatEvents.on('groupCreated', handleGroupCreated);
-    chatEvents.on('joinedGroup', handleJoinedGroup);
-    chatEvents.on('leftGroup', handleLeftGroup);
-    chatEvents.on('connecting', handleConnecting);
-    chatEvents.on('peerInitialized', handlePeerInitialized);
-    chatEvents.on('networkModeChanged', handleNetworkModeChanged);
-
-    return () => {
-      // 移除事件监听
-      chatEvents.off('error', handleError);
-      chatEvents.off('groupCreated', handleGroupCreated);
-      chatEvents.off('joinedGroup', handleJoinedGroup);
-      chatEvents.off('leftGroup', handleLeftGroup);
-      chatEvents.off('connecting', handleConnecting);
-      chatEvents.off('peerInitialized', handlePeerInitialized);
-      chatEvents.off('networkModeChanged', handleNetworkModeChanged);
-    };
-  }, []);
+    }
+  });
 
   const handleCreateGroupChat = useCallback(() => {
     if (!userName) {
@@ -180,8 +165,7 @@ const ChatPanel: React.FC = () => {
   };
 
   const handleToggleNetworkMode = () => {
-    // 使用事件系统发送切换请求 - 正确的架构模式
-    chatEvents.emit('requestToggleNetworkMode');
+    toggleNetworkMode();
     setNetworkModeDialogOpen(false);
   };
 

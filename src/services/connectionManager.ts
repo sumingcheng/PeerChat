@@ -1,7 +1,6 @@
+import { BaseEventEmitter } from '@/utils/eventEmitter';
 import { DataConnection } from 'peerjs';
-import { EventEmitter } from '@/utils/eventEmitter';
 
-// 连接状态枚举
 export enum ConnectionState {
   DISCONNECTED = 'disconnected',
   CONNECTING = 'connecting',
@@ -10,7 +9,6 @@ export enum ConnectionState {
   ERROR = 'error'
 }
 
-// 连接信息接口
 export interface ConnectionInfo {
   id: string;
   connection: DataConnection;
@@ -18,14 +16,21 @@ export interface ConnectionInfo {
   createdAt: number;
   lastActivity: number;
   retryCount: number;
-  metadata?: any;
+  metadata?: unknown;
 }
 
-/**
- * 统一的连接管理器
- * 职责：管理所有 P2P 连接的生命周期
- */
-export class ConnectionManager extends EventEmitter {
+export type ConnectionEventMap = {
+  'connection:added': { peerId: string; connectionInfo: ConnectionInfo };
+  'connection:opened': { peerId: string };
+  'connection:data': { peerId: string; data: unknown };
+  'connection:closed': { peerId: string };
+  'connection:error': { peerId: string; error: Error };
+  'connection:state_changed': { peerId: string; state: ConnectionState };
+  'connection:removed': { peerId: string };
+  [key: string]: unknown;
+};
+
+export class ConnectionManager extends BaseEventEmitter<ConnectionEventMap> {
   private connections = new Map<string, ConnectionInfo>();
 
   // 获取所有连接
@@ -215,22 +220,8 @@ export class ConnectionManager extends EventEmitter {
     return stats;
   }
 
-  // 销毁管理器
   destroy(): void {
     this.closeAllConnections();
-    // 清空所有事件监听器 - 需要逐个移除
-    const eventNames = [
-      'connection:added',
-      'connection:opened',
-      'connection:data',
-      'connection:closed',
-      'connection:error',
-      'connection:state_changed',
-      'connection:removed'
-    ];
-    eventNames.forEach((event) => {
-      // 移除所有此事件的监听器
-      (this as any).events[event] = [];
-    });
+    this.removeAllListeners();
   }
 }
