@@ -11,13 +11,6 @@
 
 </div>
 
-## Screenshots
-
-![image](https://github.com/user-attachments/assets/86215de5-b733-4210-853d-b19925e22539)
-![image](https://github.com/user-attachments/assets/e3885b5a-19cc-4405-9c87-a8134fcc8398)
-![image](https://github.com/user-attachments/assets/9148dc49-d901-40c3-b050-1807a74b024c)
-![image](https://github.com/user-attachments/assets/fda512dc-450f-4554-bcb7-516f344f9813)
-
 ---
 
 <a name="english"></a>
