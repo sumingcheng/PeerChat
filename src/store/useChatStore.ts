@@ -1,3 +1,4 @@
+import i18n from '@/i18n';
 import { ConnectionManager } from '@/services/connectionManager';
 import { GroupChatService } from '@/services/groupChatService';
 import { MessageService } from '@/services/messageService';
@@ -115,7 +116,7 @@ const useChatStore = create<ChatState>((set, get) => {
           })
           .catch((err) => {
             console.error('复制链接失败:', err);
-            chatEvents.emit('error', '复制链接失败');
+            chatEvents.emit('error', i18n.t('toast.copyFailed'));
           });
       }
     },

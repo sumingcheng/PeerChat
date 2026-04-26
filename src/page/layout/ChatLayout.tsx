@@ -12,83 +12,66 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  // 检测屏幕尺寸
   useEffect(() => {
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 768);
     };
-
     checkScreenSize();
     window.addEventListener('resize', checkScreenSize);
-
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
-  // 移动端选择聊天后自动关闭侧边栏
   useEffect(() => {
     if (isMobile && currentChat) {
       setIsSidebarOpen(false);
     }
   }, [currentChat, isMobile]);
 
-  // 移动端点击遮罩关闭侧边栏
-  const handleOverlayClick = () => {
-    if (isMobile) {
-      setIsSidebarOpen(false);
-    }
-  };
-
   return (
-    <div className="flex h-screen bg-gray-100 relative">
-      {/* 全局加载指示器 */}
+    <div className="flex h-full p-3 gap-3 relative">
       {isConnecting && (
-        <div className="absolute top-0 left-0 w-full h-1 bg-blue-100 overflow-hidden z-50">
-          <div className="h-full bg-blue-500 animate-pulse"></div>
+        <div className="absolute top-0 left-0 w-full h-0.5 z-50 overflow-hidden">
+          <div className="h-full w-full bg-blue-600 animate-loading-bar"></div>
         </div>
       )}
 
-      {/* 移动端遮罩层 */}
       {isMobile && isSidebarOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={handleOverlayClick} />
+        <div
+          className="fixed inset-0 bg-black/20 z-40 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
       )}
 
-      {/* 侧边栏 */}
       <div
         className={`
         ${
           isMobile
-            ? `fixed inset-y-0 left-0 z-50 w-80 bg-white transform transition-transform duration-200 ${
+            ? `fixed inset-y-0 left-0 z-50 w-80 transform transition-transform duration-300 ease-out ${
                 isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
               }`
-            : 'w-80 bg-white border-r border-gray-200'
+            : 'w-80 flex-shrink-0'
         }
       `}
       >
-        <Sidebar />
+        <div className="h-full bg-white rounded-xl shadow-sm border border-gray-200/60 overflow-hidden">
+          <Sidebar />
+        </div>
       </div>
 
-      {/* 主内容区域 */}
-      <div className="flex-1 flex flex-col">
-        {/* 移动端顶部工具栏 */}
+      <div className="flex-1 flex flex-col min-w-0">
         {isMobile && (
-          <div className="flex items-center justify-between p-4 bg-white border-b border-gray-200 md:hidden">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200/60 mb-3 flex items-center justify-between p-4 md:hidden">
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md"
+              className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-
             {currentChat && (
               <div className="flex items-center flex-1 ml-4">
-                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm">
+                <div className="w-8 h-8 rounded-full bg-gray-900 flex items-center justify-center text-white text-sm font-medium">
                   {currentChat.name.charAt(0).toUpperCase()}
                 </div>
                 <h1 className="ml-3 font-medium text-gray-900 truncate">{currentChat.name}</h1>
@@ -97,7 +80,9 @@ const ChatLayout: React.FC<ChatLayoutProps> = ({ children }) => {
           </div>
         )}
 
-        {children}
+        <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-200/60 overflow-hidden">
+          {children}
+        </div>
       </div>
     </div>
   );

@@ -1,24 +1,17 @@
-import React from 'react';
-import { Theme } from '@radix-ui/themes';
 import { BadgeProps } from '@/types/chat.ts';
+import React from 'react';
 
 const Badge: React.FC<BadgeProps> = ({ count, className = '' }) => {
-  if (!count) return null;
+  if (!count) { return null; }
 
   return (
-    <Theme>
-      <div
-        className={`absolute -top-1 -right-1 bg-red-500 text-white 
-          rounded-full min-w-[20px] h-5 flex items-center justify-center 
-          text-xs px-1.5 ${className}`}
-        style={{
-          boxShadow: '0 0 0 2px white',
-          transform: 'scale(0.9)'
-        }}
-      >
-        {count > 99 ? '99+' : count}
-      </div>
-    </Theme>
+    <div
+      className={`absolute -top-1 -right-1 bg-blue-600 text-white 
+        rounded-full min-w-[18px] h-[18px] flex items-center justify-center 
+        text-[10px] font-medium px-1 ring-2 ring-white ${className}`}
+    >
+      {count > 99 ? '99+' : count}
+    </div>
   );
 };
 
